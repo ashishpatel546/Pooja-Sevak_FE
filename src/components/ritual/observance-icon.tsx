@@ -1,0 +1,47 @@
+import { Sun } from 'lucide-react';
+import type { ObservanceKey } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { Diya } from '@/components/brand/diya';
+import { MoonPhase } from './moon-phase';
+import { TYPICAL_TITHI } from './observance';
+
+/**
+ * The mark for a sacred day: the moon's phase for lunar days, the sun for
+ * Sankranti, and a diya for the fortnight of the ancestors and for the
+ * loved ones a family remembers (pass `observanceKey={null}`).
+ * Sits in a round well so lists line up. Decorative.
+ */
+export function ObservanceIcon({
+  observanceKey,
+  tithi,
+  size = 'md',
+  tone = 'ink',
+  className,
+}: {
+  observanceKey: ObservanceKey | null;
+  tithi?: number | null;
+  size?: 'sm' | 'md' | 'lg';
+  tone?: 'gold' | 'ink';
+  className?: string;
+}) {
+  const well = { sm: 'size-9', md: 'size-11', lg: 'size-14' }[size];
+  const glyph = { sm: 'size-6', md: 'size-7', lg: 'size-9' }[size];
+  const surface =
+    tone === 'gold' ? 'bg-white/5 ring-1 ring-[#fbe3b6]/20' : 'bg-chandan ring-1 ring-diya/30';
+
+  let inner: React.ReactNode;
+  if (observanceKey === 'sankranti') {
+    inner = <Sun className={cn(glyph, tone === 'gold' ? 'text-diya' : 'text-sindoor')} aria-hidden="true" />;
+  } else if (observanceKey === 'pitru_paksha' || observanceKey === null) {
+    inner = <Diya className={glyph} />;
+  } else {
+    const t = tithi ?? (observanceKey ? TYPICAL_TITHI[observanceKey] : 15);
+    inner = <MoonPhase tithi={t} tone={tone} className={glyph} />;
+  }
+
+  return (
+    <span className={cn('grid shrink-0 place-items-center rounded-full', well, surface, className)} aria-hidden="true">
+      {inner}
+    </span>
+  );
+}

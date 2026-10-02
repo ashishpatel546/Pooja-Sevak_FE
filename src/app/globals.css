@@ -1,26 +1,326 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-tiro), ui-serif, Georgia, serif;
+  --font-display: var(--font-tiro), ui-serif, Georgia, serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Brand palette — "Sandhya Aarti" */
+  --color-sandhya: var(--sandhya);        /* twilight indigo */
+  --color-sandhya-deep: var(--sandhya-deep);
+  --color-diya: var(--diya);              /* lamp gold */
+  --color-sindoor: var(--sindoor);        /* saffron-red action */
+  --color-kumkum: var(--kumkum);
+  --color-tulsi: var(--tulsi);            /* success / verified */
+  --color-chandan: var(--chandan);        /* warm surface tint */
+  --color-heading: var(--heading);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --sandhya: #2a1f4a;
+  --sandhya-deep: #170f2e;
+  --diya: #e2a23b;
+  --sindoor: #c2410c;
+  --kumkum: #a61b1b;
+  --tulsi: #2f6b4f;
+  --chandan: #fbf1e3;
+  --heading: #2a1f4a;
+
+  --background: #fffaf3;
+  --foreground: #2b1d16;
+  --card: #ffffff;
+  --card-foreground: #2b1d16;
+  --popover: #ffffff;
+  --popover-foreground: #2b1d16;
+  --primary: #c2410c;
+  --primary-foreground: #ffffff;
+  --secondary: #2a1f4a;
+  --secondary-foreground: #fff4e0;
+  --muted: #f6ede1;
+  --muted-foreground: #6e5b4e;
+  --accent: #fcebd3;
+  --accent-foreground: #7a3410;
+  --destructive: #b42318;
+  --border: #ebdcc8;
+  --input: #e3d2bc;
+  --ring: #c2410c;
+  --chart-1: #c2410c;
+  --chart-2: #2a1f4a;
+  --chart-3: #e2a23b;
+  --chart-4: #2f6b4f;
+  --chart-5: #a61b1b;
+  --radius: 0.75rem;
+  --sidebar: #fffaf3;
+  --sidebar-foreground: #2b1d16;
+  --sidebar-primary: #c2410c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fcebd3;
+  --sidebar-accent-foreground: #7a3410;
+  --sidebar-border: #ebdcc8;
+  --sidebar-ring: #c2410c;
+}
+
+.dark {
+  --sandhya: #2a1f4a;
+  --sandhya-deep: #0f0a1f;
+  --diya: #f0b356;
+  --sindoor: #f0a84a;
+  --kumkum: #f07167;
+  --tulsi: #7cc6a0;
+  --chandan: #1e1734;
+  --heading: #f7d9a8;
+
+  --background: #140f24;
+  --foreground: #f7ebdd;
+  --card: #1e1734;
+  --card-foreground: #f7ebdd;
+  --popover: #1e1734;
+  --popover-foreground: #f7ebdd;
+  --primary: #f0a84a;
+  --primary-foreground: #1a1208;
+  --secondary: #c9b8f0;
+  --secondary-foreground: #140f24;
+  --muted: #261e3f;
+  --muted-foreground: #bfae9e;
+  --accent: #2e2448;
+  --accent-foreground: #f7d9a8;
+  --destructive: #f07167;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: #f0a84a;
+  --chart-1: #f0a84a;
+  --chart-2: #c9b8f0;
+  --chart-3: #f0b356;
+  --chart-4: #7cc6a0;
+  --chart-5: #f07167;
+  --sidebar: #1e1734;
+  --sidebar-foreground: #f7ebdd;
+  --sidebar-primary: #f0a84a;
+  --sidebar-primary-foreground: #1a1208;
+  --sidebar-accent: #2e2448;
+  --sidebar-accent-foreground: #f7d9a8;
+  --sidebar-border: rgb(255 255 255 / 0.1);
+  --sidebar-ring: #f0a84a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-feature-settings: "kern", "liga";
+  }
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+    color: var(--heading);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), a {
+    cursor: pointer;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Devanagari matras and the shirorekha need more room than Latin caps.
+   Unlayered on purpose so it wins over leading-tight utilities in Hindi. */
+:lang(hi) :is(h1, h2, h3) {
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+/* ───────────────── Sandhya (twilight) surface ─────────────────
+   The brand's signature backdrop: the sky during evening aarti. */
+.sandhya {
+  --heading: #fbe3b6;
+  color: #f4e6d4;
+  background:
+    radial-gradient(60% 55% at 78% 18%, rgb(226 162 59 / 0.28), transparent 70%),
+    radial-gradient(45% 50% at 12% 95%, rgb(194 65 12 / 0.22), transparent 70%),
+    linear-gradient(170deg, #2a1f4a 0%, #1d1538 55%, #150e2a 100%);
+}
+.sandhya :where(p, li) {
+  color: rgb(244 230 212 / 0.86);
+}
+
+/* Fine star-dust on twilight surfaces */
+.stars::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgb(255 236 200 / 0.7), transparent 60%),
+    radial-gradient(1px 1px at 34% 64%, rgb(255 236 200 / 0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 58% 18%, rgb(255 236 200 / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 82% 48%, rgb(255 236 200 / 0.45), transparent 60%),
+    radial-gradient(1px 1px at 92% 82%, rgb(255 236 200 / 0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 22% 86%, rgb(255 236 200 / 0.4), transparent 60%);
+}
+
+/* ───────────────── Aarti ring (running light border) ─────────────────
+   A single flame of light circling the card, as the aarti thali circles
+   the deity. Uses an animatable custom property for the conic angle. */
+@property --aarti-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.aarti-ring {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--aarti-radius, 1.5rem);
+  padding: 2px;
+  background:
+    conic-gradient(
+      from var(--aarti-angle),
+      transparent 0deg,
+      transparent 200deg,
+      rgb(194 65 12 / 0.35) 250deg,
+      rgb(226 162 59 / 0.9) 315deg,
+      #ffe7a8 345deg,
+      #fff8e1 352deg,
+      #e2a23b 358deg,
+      transparent 360deg
+    ),
+    linear-gradient(var(--border), var(--border));
+  animation: aarti-orbit 4s linear infinite;
+}
+/* Soft glow that follows the flame */
+.aarti-ring::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--aarti-angle),
+    transparent 0deg,
+    transparent 270deg,
+    rgb(226 162 59 / 0.9) 345deg,
+    transparent 360deg
+  );
+  filter: blur(18px);
+  opacity: 0.85;
+  animation: aarti-orbit 4s linear infinite;
+}
+.aarti-ring > .aarti-inner {
+  border-radius: calc(var(--aarti-radius, 1.5rem) - 2px);
+  background: var(--card);
+  height: 100%;
+}
+.aarti-ring:focus-within {
+  animation-duration: 2.6s;
+}
+.aarti-ring:focus-within::before {
+  animation-duration: 2.6s;
+}
+
+@keyframes aarti-orbit {
+  to {
+    --aarti-angle: 360deg;
+  }
+}
+
+/* ───────────────── Diya flame ───────────────── */
+.diya-flame {
+  transform-origin: 50% 100%;
+  animation: flicker 2.8s ease-in-out infinite;
+}
+.diya-glow {
+  animation: glow 2.8s ease-in-out infinite;
+}
+@keyframes flicker {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); }
+  25% { transform: scale(0.96, 1.04) rotate(-1.5deg); }
+  50% { transform: scale(1.03, 0.97) rotate(1deg); }
+  75% { transform: scale(0.98, 1.03) rotate(-0.5deg); }
+}
+@keyframes glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.8; }
+}
+
+/* Slow mandala rotation for the hero */
+.mandala-spin {
+  animation: mandala 120s linear infinite;
+}
+@keyframes mandala {
+  to { transform: rotate(360deg); }
+}
+
+/* Thin toran-like divider (marigold string) */
+.toran {
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 3px, var(--diya) 2.5px, transparent 3px);
+  background-size: 18px 10px;
+  background-repeat: repeat-x;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aarti-ring,
+  .aarti-ring::before,
+  .diya-flame,
+  .diya-glow,
+  .mandala-spin {
+    animation: none !important;
+  }
+  .aarti-ring {
+    --aarti-angle: 300deg;
+  }
 }
