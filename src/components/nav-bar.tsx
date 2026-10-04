@@ -35,11 +35,13 @@ type LinkKey =
   | 'link.panditBookings'
   | 'link.panditServices'
   | 'link.panditProfile'
-  | 'link.admin';
+  | 'link.admin'
+  | 'link.contact';
 
 type NavLink = { href: string; label: LinkKey };
 
 const HOME: NavLink = { href: '/', label: 'link.home' };
+const CONTACT: NavLink = { href: '/contact', label: 'link.contact' };
 
 function linksFor(role: Role | undefined): NavLink[] {
   const discover: NavLink[] = [
@@ -54,6 +56,7 @@ function linksFor(role: Role | undefined): NavLink[] {
       ...discover,
       { href: '/reminders', label: 'link.reminders' },
       { href: '/bookings', label: 'link.myBookings' },
+      CONTACT,
     ];
   if (role === 'pandit')
     return [
@@ -62,13 +65,14 @@ function linksFor(role: Role | undefined): NavLink[] {
       { href: '/pandit/services', label: 'link.panditServices' },
       { href: '/pandit/profile', label: 'link.panditProfile' },
       { href: '/panchang', label: 'link.panchang' },
+      CONTACT,
     ];
   if (role === 'admin')
     return [
       { href: '/admin', label: 'link.admin' },
       { href: '/pujas', label: 'link.pujas' },
     ];
-  return discover;
+  return [...discover, CONTACT];
 }
 
 const sheetLink =
@@ -87,7 +91,7 @@ export function NavBar() {
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/70">
       <nav
         aria-label={t('aria.main')}
-        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6"
+        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-1.5 px-3 min-[360px]:px-4 sm:gap-3 sm:px-6"
       >
         <Logo className="shrink-0" />
 

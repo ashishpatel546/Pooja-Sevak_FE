@@ -17,7 +17,7 @@ export function Logo({ className, onDark = false }: { className?: string; onDark
       <Diya className="size-8 -mt-1" />
       <span
         className={cn(
-          'font-heading text-xl leading-none tracking-tight',
+          'font-heading text-base leading-none tracking-tight min-[360px]:text-xl',
           onDark ? 'text-[#fbe3b6]' : 'text-heading',
         )}
       >

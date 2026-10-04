@@ -18,6 +18,7 @@ const nav: Record<keyof typeof en, string> = {
   'link.panditProfile': 'प्रोफ़ाइल',
   'link.admin': 'एडमिन कंसोल',
   'link.dashboard': 'डैशबोर्ड',
+  'link.contact': 'संपर्क',
   'link.account': 'खाता',
   'account.aria': 'आपका खाता, {name}',
   'menu.open': 'मेन्यू खोलें',

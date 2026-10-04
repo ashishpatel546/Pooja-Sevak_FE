@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CalendarDays, ListChecks, TriangleAlert, UserRound } from 'lucide-react';
+import { ArrowRight, CalendarDays, Landmark, ListChecks, TriangleAlert, UserRound } from 'lucide-react';
 import type { AuthUser, Booking, PanditEarnings, PanditProfile, PanditServiceItem } from '@/lib/types';
 import { useFormat, useT } from '@/i18n';
 import { Button } from '@/components/ui/button';
@@ -164,6 +164,9 @@ export function PanditHome({ user, token }: { user: AuthUser; token: string | nu
             </Button>
             <Button variant="outline" size="lg" className="justify-start" render={<Link href="/pandit/profile" />} nativeButton={false}>
               <UserRound aria-hidden="true" /> {t('pandit.shortcuts.profile')}
+            </Button>
+            <Button variant="outline" size="lg" className="justify-start" render={<Link href="/pandit/payouts" />} nativeButton={false}>
+              <Landmark aria-hidden="true" /> {t('pandit.shortcuts.payouts')}
             </Button>
           </nav>
         </aside>

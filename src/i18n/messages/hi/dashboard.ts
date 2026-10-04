@@ -45,7 +45,7 @@ const dashboard: Record<keyof typeof en, string> = {
   'pandit.bookings.empty.verified': 'जब कोई परिवार आपको बुक करेगा, तो उसका अनुरोध संकल्प विवरण के साथ यहाँ दिखेगा।',
   'pandit.bookings.empty.unverified': 'हमारी टीम से प्रोफ़ाइल स्वीकृत होते ही परिवार आपको बुक कर सकेंगे।',
   'pandit.earnings.title': 'आपकी दक्षिणा',
-  'pandit.earnings.caption': 'संपन्न पूजाओं से, प्लेटफ़ॉर्म कमीशन कटने के बाद। राशि हर सेटलमेंट के बाद आपके खाते में भेजी जाती है।',
+  'pandit.earnings.caption': 'संपन्न पूजाओं से, प्लेटफ़ॉर्म कमीशन कटने के बाद। “भुगतान” में जाकर राशि अपने बैंक खाते में निकालें।',
   'pandit.earnings.net': 'कुल कमाई',
   'pandit.earnings.month': 'इस महीने',
   'pandit.earnings.upcoming': 'आने वाली पूजाएँ',
@@ -53,6 +53,7 @@ const dashboard: Record<keyof typeof en, string> = {
   'pandit.shortcuts.label': 'पंडित जी के लिए शॉर्टकट',
   'pandit.shortcuts.services': 'मेरी पूजाएँ और दक्षिणा',
   'pandit.shortcuts.profile': 'प्रोफ़ाइल और उपलब्धता',
+  'pandit.shortcuts.payouts': 'भुगतान और बैंक खाता',
 
   'mobile.title': 'कृपया अपना मोबाइल नंबर सत्यापित करें',
   'mobile.why.pandit': 'बुकिंग के बारे में परिवार और हमारी टीम इसी नंबर पर आपसे संपर्क करते हैं — पूजा के दिन एक फ़ोन कॉल बहुत काम आता है।',
@@ -86,8 +87,8 @@ const dashboard: Record<keyof typeof en, string> = {
   'pandit.earnings.due': 'भुगतान बाकी',
   'pandit.earnings.onHold': 'रोका गया',
   'pandit.earnings.settled': 'भुगतान हो गया',
-  'pandit.earnings.dueHint_one': '{count} पूजा · अगले सेटलमेंट में भुगतान',
-  'pandit.earnings.dueHint_other': '{count} पूजाएँ · अगले सेटलमेंट में भुगतान',
+  'pandit.earnings.dueHint_one': '{count} पूजा · “भुगतान” से निकालें',
+  'pandit.earnings.dueHint_other': '{count} पूजाएँ · “भुगतान” से निकालें',
   'pandit.earnings.holdHint': 'कारण बुकिंग पर देखें, या सहायता से संपर्क करें।',
 };
 

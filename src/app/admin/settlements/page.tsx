@@ -18,6 +18,8 @@ import { EmptyState } from '@/components/common/empty-state';
 import { Ledger, LedgerRow } from '@/components/dashboard/ledger';
 import { ConfirmDialog } from '@/components/dashboard/confirm-dialog';
 import { errorMessage, useApi } from '@/components/dashboard/use-api';
+import { PayoutAccountsReview } from '@/components/admin/payout-accounts-review';
+import { WithdrawalRequests } from '@/components/admin/withdrawal-requests';
 
 type Pending =
   | { kind: 'settle'; group: SettlementGroup; bookings: SettlementBooking[] }
@@ -50,6 +52,7 @@ export default function AdminSettlementsPage() {
   const { token } = useAuth();
   const t = useT('admin');
   const ts = useT('samagri');
+  const tp = useT('payouts');
   const tc = useT('common');
   const f = useFormat();
   const { locale } = useLocale();
@@ -105,6 +108,11 @@ export default function AdminSettlementsPage() {
     <>
       <PageHeader title={t('settlements.title')} description={t('settlements.desc')} />
 
+      <div className="mb-8 grid gap-6">
+        <WithdrawalRequests token={token} onChanged={data.reload} />
+        <PayoutAccountsReview token={token} />
+      </div>
+
       {data.loading ? (
         <div className="grid gap-6">
           <Skeleton className="h-32 rounded-2xl" />
@@ -146,7 +154,9 @@ export default function AdminSettlementsPage() {
             <div className="grid gap-6">
               <p className="text-sm text-muted-foreground">{t('settlements.noPayoutDetails')}</p>
               {s.pandits.map((g) => {
-                const due = g.bookings.filter((b) => b.payout_status === 'due');
+                // Bookings in a withdrawal request are paid from that request.
+                const due = g.bookings.filter((b) => b.payout_status === 'due' && !b.withdrawal_id);
+                const dueTotal = due.reduce((sum, b) => sum + Number(b.payout_amount ?? b.pandit_credit), 0);
                 return (
                   <section key={g.pandit_id} aria-labelledby={`p-${g.pandit_id}`} className="rounded-2xl border bg-card">
                     <header className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
@@ -178,7 +188,7 @@ export default function AdminSettlementsPage() {
                       {due.length > 0 && (
                         <Button onClick={() => setPending({ kind: 'settle', group: g, bookings: due })}>
                           <Wallet aria-hidden="true" />
-                          {t('settlements.settleAll', { amount: f.inr(g.due_total) })}
+                          {t('settlements.settleAll', { amount: f.inr(dueTotal) })}
                         </Button>
                       )}
                     </header>
@@ -208,7 +218,9 @@ export default function AdminSettlementsPage() {
                                 </span>
                               )}
                             </span>
-                            {b.payout_status === 'due' ? (
+                            {b.withdrawal_id ? (
+                              <span className="text-sm text-muted-foreground">{tp('admin.inRequest')}</span>
+                            ) : b.payout_status === 'due' ? (
                               <>
                                 <Button
                                   size="sm"

@@ -46,7 +46,7 @@ const dashboard = {
   'pandit.bookings.empty.verified': 'When a family books you, the request will appear here with their sankalp details.',
   'pandit.bookings.empty.unverified': 'Once our team approves your profile, families will be able to book you.',
   'pandit.earnings.title': 'Your dakshina',
-  'pandit.earnings.caption': 'From completed pujas, after platform commission. Money reaches you after each settlement.',
+  'pandit.earnings.caption': 'From completed pujas, after platform commission. Withdraw to your bank account from Payouts.',
   'pandit.earnings.net': 'Total earned',
   'pandit.earnings.month': 'This month',
   'pandit.earnings.upcoming': 'Upcoming pujas',
@@ -54,6 +54,7 @@ const dashboard = {
   'pandit.shortcuts.label': 'Pandit shortcuts',
   'pandit.shortcuts.services': 'My pujas & pricing',
   'pandit.shortcuts.profile': 'Profile & availability',
+  'pandit.shortcuts.payouts': 'Payouts & bank account',
 
   // Mobile prompt
   'mobile.title': 'Please verify your mobile number',
@@ -91,8 +92,8 @@ const dashboard = {
   'pandit.earnings.due': 'Payment pending',
   'pandit.earnings.onHold': 'On hold',
   'pandit.earnings.settled': 'Paid to you',
-  'pandit.earnings.dueHint_one': '{count} puja · paid in the next settlement',
-  'pandit.earnings.dueHint_other': '{count} pujas · paid in the next settlement',
+  'pandit.earnings.dueHint_one': '{count} puja · withdraw from Payouts',
+  'pandit.earnings.dueHint_other': '{count} pujas · withdraw from Payouts',
   'pandit.earnings.holdHint': 'See the reason on the booking, or contact support.',
 } satisfies Record<string, string>;
 

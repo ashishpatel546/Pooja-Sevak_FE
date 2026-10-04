@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CalendarCheck, CalendarDays, CircleAlert, RefreshCw, Sun, XCircle } from 'lucide-react';
 import { useRequireAuth } from '@/lib/use-require-auth';
@@ -24,14 +25,34 @@ const TABS: { value: PanditBookingTab; icon: typeof Sun }[] = [
 ];
 
 export default function PanditBookingsPage() {
+  return (
+    <Suspense>
+      <PanditBookings />
+    </Suspense>
+  );
+}
+
+function PanditBookings() {
   const { ready, token } = useRequireAuth(['pandit']);
+  const router = useRouter();
+  const chatParam = useSearchParams().get('chat');
   const t = useT('pandit');
   const tc = useT('common');
   const bookings = useApi<Booking[]>(ready ? '/bookings/pandit/me' : null, token);
   const groups = groupPanditBookings(bookings.data);
   const [tab, setTab] = useState<PanditBookingTab | null>(null);
-  // Open on Today when there is something today, else on requests.
-  const active: PanditBookingTab = tab ?? (groups.today.length ? 'today' : 'upcoming');
+  // `?chat=<bookingId>` (from a "new message" notification) opens that chat.
+  const [closedChat, setClosedChat] = useState<string | null>(null);
+  const chatId = chatParam && chatParam !== closedChat ? chatParam : null;
+  const chatTab = chatId
+    ? TABS.find((x) => groups[x.value].some((b) => b.id === chatId))?.value
+    : undefined;
+  // Open on the chat's tab, else Today when there is something today, else requests.
+  const active: PanditBookingTab = tab ?? chatTab ?? (groups.today.length ? 'today' : 'upcoming');
+  const closeChat = () => {
+    setClosedChat(chatParam);
+    router.replace('/pandit/bookings', { scroll: false });
+  };
 
   const onChanged = (u: Booking | null) => (u ? bookings.mutate((l) => replaceBooking(l, u)) : bookings.reload());
 
@@ -83,7 +104,13 @@ export default function PanditBookingsPage() {
                   {t(`bookings.empty.${tab.value}`)}
                 </EmptyState>
               ) : (
-                <DayGroups list={groups[tab.value]} token={token} onChanged={onChanged} />
+                <DayGroups
+                  list={groups[tab.value]}
+                  token={token}
+                  onChanged={onChanged}
+                  chatId={chatId}
+                  onChatClosed={closeChat}
+                />
               )}
             </TabsContent>
           ))}
@@ -98,10 +125,14 @@ function DayGroups({
   list,
   token,
   onChanged,
+  chatId,
+  onChatClosed,
 }: {
   list: Booking[];
   token: string | null;
   onChanged: (u: Booking | null) => void;
+  chatId: string | null;
+  onChatClosed: () => void;
 }) {
   const f = useFormat();
   const days: { key: string; items: Booking[] }[] = [];
@@ -120,7 +151,14 @@ function DayGroups({
           </h2>
           <div className="grid gap-4">
             {d.items.map((b) => (
-              <PanditBookingCard key={b.id} booking={b} token={token} onChanged={onChanged} />
+              <PanditBookingCard
+                key={b.id}
+                booking={b}
+                token={token}
+                onChanged={onChanged}
+                chatOpen={b.id === chatId}
+                onChatOpenChange={(o) => !o && onChatClosed()}
+              />
             ))}
           </div>
         </section>

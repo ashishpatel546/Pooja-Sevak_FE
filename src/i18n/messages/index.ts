@@ -19,6 +19,8 @@ import en_info from './en/info';
 import en_legal from './en/legal';
 import en_business from './en/business';
 import en_samagri from './en/samagri';
+import en_payouts from './en/payouts';
+import en_chat from './en/chat';
 import hi_common from './hi/common';
 import hi_nav from './hi/nav';
 import hi_auth from './hi/auth';
@@ -39,6 +41,8 @@ import hi_info from './hi/info';
 import hi_legal from './hi/legal';
 import hi_business from './hi/business';
 import hi_samagri from './hi/samagri';
+import hi_payouts from './hi/payouts';
+import hi_chat from './hi/chat';
 
 export const en = {
   common: en_common,
@@ -61,6 +65,8 @@ export const en = {
   legal: en_legal,
   business: en_business,
   samagri: en_samagri,
+  payouts: en_payouts,
+  chat: en_chat,
 };
 
 export type Messages = typeof en;
@@ -87,4 +93,6 @@ export const hi: { [N in Namespace]: Record<keyof Messages[N], string> } = {
   legal: hi_legal,
   business: hi_business,
   samagri: hi_samagri,
+  payouts: hi_payouts,
+  chat: hi_chat,
 };

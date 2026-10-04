@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Clock, Mail, MapPin, Phone } from 'lucide-react';
+import { Clock, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { getLocale, getT } from '@/i18n/server';
 import { PageHeader, PageShell } from '@/components/common/page-header';
 import { JsonLd } from '@/components/seo/json-ld';
+import { WhatsappForm } from '@/components/contact/whatsapp-form';
 import { Prose, linkClass } from '@/components/info/prose';
 import { siteNodes } from '@/components/info/site-nodes';
 import { getSiteInfo } from '@/lib/business-profile';
+import { SUPPORT_PHONE_DISPLAY, supportWhatsappUrl } from '@/lib/support';
 import { publicMetadata } from '@/lib/seo/metadata';
 import { breadcrumbSchema } from '@/lib/seo/schema';
 
@@ -53,7 +56,7 @@ export default async function ContactPage() {
       <PageShell>
         <PageHeader title={t('contact.title')} description={t('contact.lead')} />
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Channel icon={Mail} title={t('contact.email.title')}>
             <a href={`mailto:${supportEmail}`} className={`${linkClass} text-lg`}>
               {supportEmail}
@@ -68,6 +71,17 @@ export default async function ContactPage() {
               {supportHours && <p className="mt-1 text-sm text-muted-foreground">{supportHours}</p>}
             </Channel>
           )}
+          <Channel icon={MessageCircle} title={t('contact.whatsapp.title')}>
+            <a
+              href={supportWhatsappUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${linkClass} text-lg`}
+            >
+              {SUPPORT_PHONE_DISPLAY}
+            </a>
+            <p className="mt-1 text-sm text-muted-foreground">{t('contact.whatsapp.text')}</p>
+          </Channel>
           {postalAddress.length > 0 && (
             <Channel icon={MapPin} title={t('contact.address.title')}>
               <address className="not-italic">
@@ -93,6 +107,40 @@ export default async function ContactPage() {
             <span>{t('contact.response', { hours: responseHours })}</span>
           </p>
         )}
+
+        <div className="mt-12 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <section aria-labelledby="wa-h" className="min-w-0 rounded-2xl border bg-card p-5 sm:p-7">
+            <h2 id="wa-h" className="text-2xl">
+              {t('contact.wa.title')}
+            </h2>
+            <p className="mt-1 mb-6 text-muted-foreground">{t('contact.wa.lead')}</p>
+            <Suspense fallback={<div className="min-h-96" />}>
+              <WhatsappForm />
+            </Suspense>
+          </section>
+
+          <figure className="flex items-center gap-4 rounded-2xl border bg-chandan p-4 sm:p-5 lg:flex-col lg:p-6 lg:text-center">
+            <a
+              href={supportWhatsappUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-xl bg-white p-1.5 shadow-sm ring-1 ring-black/5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <Image
+                src="/whatsapp-qr.svg"
+                alt={t('contact.qr.alt', { phone: SUPPORT_PHONE_DISPLAY })}
+                width={176}
+                height={176}
+                unoptimized
+                className="size-28 sm:size-36 lg:size-44"
+              />
+            </a>
+            <figcaption className="min-w-0">
+              <span className="block font-medium text-heading">{t('contact.qr.caption')}</span>
+              <span className="mt-1 block text-sm text-muted-foreground">{t('contact.qr.hint')}</span>
+            </figcaption>
+          </figure>
+        </div>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-2">
           <section aria-labelledby="tips-h" className="max-w-[70ch]">

@@ -387,6 +387,8 @@ export type SettlementBooking = {
   payout_settled_at: string | null;
   payout_reference: string | null;
   payout_note: string | null;
+  /** Set while the booking is part of the pandit's withdrawal request. */
+  withdrawal_id: string | null;
 };
 
 export type SettlementGroup = {
@@ -406,6 +408,178 @@ export type SettlementOverview = {
   totals: { due: number; due_count: number; on_hold: number; on_hold_count: number };
   pandits: SettlementGroup[];
   recent_settled: (SettlementBooking & { pandit_id: string; pandit_name: string | null })[];
+};
+
+// ── Pandit payouts: bank account + withdrawals ──
+
+export type PayoutAccountStatus =
+  | 'verifying'
+  | 'needs_document'
+  | 'pending_review'
+  | 'approved'
+  | 'rejected'
+  | 'replaced';
+
+/** Why the pandit has to act on his account. */
+export type PayoutAccountReason = 'bank_name_mismatch' | 'bank_invalid' | 'bank_unavailable' | 'admin';
+
+/** The pandit's own view: account number and PAN masked. */
+export type PayoutAccount = {
+  id: string;
+  status: PayoutAccountStatus;
+  reason: PayoutAccountReason | null;
+  account_holder_name: string;
+  account_number_masked: string;
+  ifsc: string;
+  bank_name: string | null;
+  branch: string | null;
+  pan_masked: string;
+  verified_via: 'bank' | 'document' | null;
+  review_note: string | null;
+  has_document: boolean;
+  document_uploaded_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+export type PayoutAccountState = {
+  /** Payouts go only to an account in this name. */
+  kyc_name: string | null;
+  blocked_reason: 'profile_not_approved' | 'no_kyc_name' | null;
+  bank_check_enabled: boolean;
+  account: PayoutAccount | null;
+};
+
+export type WithdrawalStatus = 'requested' | 'paid' | 'rejected' | 'cancelled';
+
+export type Withdrawal = {
+  id: string;
+  amount: number;
+  booking_count: number;
+  status: WithdrawalStatus;
+  reference: string | null;
+  note: string | null;
+  requested_at: string;
+  processed_at: string | null;
+  account_number_masked: string | null;
+  bank_name: string | null;
+};
+
+export type WithdrawalSummary = {
+  available: number;
+  available_count: number;
+  min_withdrawal: number;
+  account_approved: boolean;
+  can_withdraw: boolean;
+  open_request: Withdrawal | null;
+  history: Withdrawal[];
+};
+
+/** An operator's view of an account under review: full details. */
+export type AdminPayoutAccount = Omit<PayoutAccount, 'account_number_masked' | 'pan_masked'> & {
+  pandit_id: string;
+  pandit_name: string | null;
+  pandit_mobile: string | null;
+  pandit_city: string | null;
+  kyc_name: string | null;
+  account_number: string;
+  pan_number: string;
+  bank_registered_name: string | null;
+};
+
+export type AdminWithdrawal = {
+  id: string;
+  status: WithdrawalStatus;
+  amount: number;
+  booking_count: number;
+  reference: string | null;
+  note: string | null;
+  requested_at: string;
+  processed_at: string | null;
+  pandit_id: string;
+  pandit_name: string | null;
+  pandit_mobile: string | null;
+  pandit_city: string | null;
+  account: (PayoutAccount & { account_number: string; pan_number: string }) | null;
+  bookings: {
+    id: string;
+    start_time: string;
+    completed_at: string | null;
+    puja: { name: string; name_hi: string | null } | null;
+    customer_name: string | null;
+    payout_amount: number;
+  }[];
+};
+
+// ── Booking chat and the call button ──
+
+export type ChatRole = 'customer' | 'pandit';
+export type ChatBlockReason = 'phone' | 'email' | 'upi' | 'link' | 'social' | 'contact_request';
+
+export type ChatMessage = {
+  id: string;
+  sender_role: ChatRole;
+  body: string;
+  created_at: string;
+};
+
+export type ChatThread = {
+  me: ChatRole;
+  can_send: boolean;
+  closed_reason: 'unpaid' | 'completed' | 'cancelled' | null;
+  strikes: number;
+  messages: ChatMessage[];
+};
+
+/** Body of the 422 when a message carried contact details. */
+export type ChatBlocked = {
+  code: 'CONTACT_INFO_BLOCKED';
+  message: string;
+  reasons: ChatBlockReason[];
+  strikes: number;
+};
+
+/** The other side's phone, only inside the call window. */
+export type BookingContact = {
+  with: ChatRole;
+  name: string | null;
+  opens_at: string;
+  closes_at: string;
+  open: boolean;
+  reason: 'not_yet' | 'not_confirmed' | 'finished' | 'no_number' | null;
+  phone: string | null;
+};
+
+export type ChatFlagStatus = 'open' | 'dismissed' | 'warned';
+
+export type AdminChatFlag = {
+  id: string;
+  status: ChatFlagStatus;
+  body: string;
+  reasons: ChatBlockReason[];
+  created_at: string;
+  review_note: string | null;
+  reviewed_at: string | null;
+  sender_id: string;
+  sender_role: ChatRole;
+  sender_name: string | null;
+  sender_strikes: number;
+  pandit_profile_id: string | null;
+  booking: {
+    id: string;
+    start_time: string;
+    booking_status: BookingStatus;
+    customer_name: string | null;
+    pandit_name: string | null;
+    puja: { name: string; name_hi: string | null } | null;
+  } | null;
+};
+
+export type AdminChatThread = {
+  booking_id: string;
+  customer_name: string | null;
+  pandit_name: string | null;
+  messages: (ChatMessage & { blocked: boolean; reasons: ChatBlockReason[] })[];
 };
 
 export type AdminStats = {
