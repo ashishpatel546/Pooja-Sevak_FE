@@ -5,6 +5,8 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
+# postinstall runs scripts/copy-pdfjs-assets.mjs, so it must exist before npm ci
+COPY scripts ./scripts
 RUN npm ci
 
 # ---- build: compile the standalone Next.js server ----
