@@ -5,7 +5,9 @@ const seo: Record<keyof typeof en, string> = {
   'home.title': 'पूजा सेवक — घर पर और ऑनलाइन पूजा के लिए सत्यापित पंडित जी',
   'breadcrumb.home': 'मुख्य पृष्ठ',
   'breadcrumb.pujas': 'पूजाएँ',
-  'puja.title': '{name} — सत्यापित पंडित जी बुक करें',
+  'puja.title': '{name} — घर पर सत्यापित पंडित जी बुक करें',
+  'puja.titleOnline': '{name} — ऑनलाइन या घर पर सत्यापित पंडित जी बुक करें',
+  'puja.searchName': '{name} पूजा',
   'puja.description':
     'अपने घर पर या ऑनलाइन {name} के लिए सत्यापित पंडित जी बुक करें। दक्षिणा, अवधि और सामग्री की सूची देखें।',
   'puja.descriptionPrice':

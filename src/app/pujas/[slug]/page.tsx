@@ -16,6 +16,10 @@ type Props = {
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
+// Names that already say what the rite is ("Ganesh Puja", "Sundarkand Path") are
+// used as-is in titles; others get "Puja" so they match how people search.
+const RITE_WORD = /\b(puja|pooja|pujan|path|katha|jaap|jap|havan|sanskar|shraddh)\b|पूजा|पूजन|पाठ|कथा|जाप|हवन|संस्कार|श्राद्ध/i;
+
 // `?date=` / `?occasion=` (from "Book for this day") are deliberately left out of
 // the canonical below: every dated variant canonicalises to the bare puja URL.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -40,7 +44,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lead = excerpt(pick(puja, 'tagline', locale), 110);
   return publicMetadata({
     path,
-    title: t('puja.title', { name }),
+    title: t(puja.supports_online ? 'puja.titleOnline' : 'puja.title', {
+      name: RITE_WORD.test(name) ? name : t('puja.searchName', { name }),
+    }),
     description: lead ? `${lead} ${generic}` : generic,
     imageBase: path,
     robots: puja.is_active === false ? { index: false, follow: true } : undefined,

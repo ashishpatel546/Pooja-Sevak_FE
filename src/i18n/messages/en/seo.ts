@@ -4,7 +4,10 @@ const seo = {
   'home.title': 'Pooja Sevak — Verified pandits for home and online pujas',
   'breadcrumb.home': 'Home',
   'breadcrumb.pujas': 'Pujas',
-  'puja.title': '{name} — book a verified pandit',
+  'puja.title': '{name} — book a verified pandit at home',
+  'puja.titleOnline': '{name} online or at home — book a verified pandit',
+  // Search name for catalog names without a ritual word (Rudrabhishek → Rudrabhishek Puja).
+  'puja.searchName': '{name} Puja',
   'puja.description':
     'Book {name} with a verified pandit ji at your home or online. See dakshina, duration and the samagri list.',
   'puja.descriptionPrice':
