@@ -16,6 +16,7 @@ const nav = {
   'link.panditProfile': 'Profile',
   'link.admin': 'Admin console',
   'link.dashboard': 'Dashboard',
+  'link.contact': 'Contact',
   'link.account': 'Account',
   'account.aria': 'Your account, {name}',
   'menu.open': 'Open menu',

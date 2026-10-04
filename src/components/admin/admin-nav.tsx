@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, CalendarDays, LayoutDashboard, Settings2, UsersRound, Wallet, type LucideIcon } from 'lucide-react';
+import { BookOpen, CalendarDays, LayoutDashboard, MessageSquareWarning, Settings2, UsersRound, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useT } from '@/i18n';
 
@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/admin/pandits', key: 'pandits', icon: UsersRound },
   { href: '/admin/bookings', key: 'bookings', icon: CalendarDays },
   { href: '/admin/settlements', key: 'settlements', icon: Wallet },
+  { href: '/admin/chats', key: 'chats', icon: MessageSquareWarning },
   { href: '/admin/catalog', key: 'catalog', icon: BookOpen },
   { href: '/admin/settings', key: 'settings', icon: Settings2 },
 ] as const satisfies readonly { href: string; key: string; icon: LucideIcon }[];

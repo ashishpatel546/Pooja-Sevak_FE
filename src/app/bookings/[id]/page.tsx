@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
@@ -35,6 +35,9 @@ import { Button } from '@/components/ui/button';
 import { CancelBookingDialog, ReviewForm } from '@/components/customer/booking-actions';
 import { BookingTimeline } from '@/components/customer/booking-timeline';
 import { CompletionCodeCard } from '@/components/customer/completion-code-card';
+import { CallButton } from '@/components/booking/call-button';
+import { ChatPanel } from '@/components/booking/chat-panel';
+import { OnlinePujaHelp } from '@/components/booking/online-help';
 import { ReviewParams, Stars } from '@/components/common/rating-breakdown';
 import { canEditReview, canRate, reviewEditableUntil } from '@/lib/review-rules';
 import { FeeLines, hasExtras } from '@/components/customer/price-breakdown';
@@ -47,7 +50,18 @@ import { CustomerOnly } from '@/components/customer/wrong-role';
 import { useErrorText } from '@/components/ritual/use-error-text';
 import { isFullyVerified, VerificationPanel, verificationMissing } from '@/components/auth/verification';
 
-const JOIN_EARLY_MS = 15 * 60_000;
+/** Matches the backend: the family gets the link 5 minutes before the start. */
+const JOIN_EARLY_MS = 5 * 60_000;
+/** The room is treated as over 30 minutes after the scheduled end. */
+const LIVE_ENDS_AFTER_MS = 30 * 60_000;
+
+/** While an online puja is about to start or under way, refetch so a new link shows up. */
+function liveRefreshDue(b: Booking | undefined, now: number) {
+  if (!b || b.booking_type !== 'online') return false;
+  if (b.booking_status !== 'confirmed' && b.booking_status !== 'in_progress') return false;
+  const start = +new Date(b.start_time);
+  return now >= start - JOIN_EARLY_MS - 60_000 && now <= +new Date(b.end_time) + LIVE_ENDS_AFTER_MS;
+}
 
 function Panel({
   id,
@@ -96,12 +110,10 @@ function JoinLive({ booking, now }: { booking: Booking; now: number }) {
   const unpaid = booking.payment_status !== 'paid';
 
   let body: React.ReactNode;
-  if (booking.booking_status === 'completed' || (active && now > end + 30 * 60_000)) {
+  if (booking.booking_status === 'completed' || (active && now > end + LIVE_ENDS_AFTER_MS)) {
     body = <p className="text-sm text-muted-foreground">{t('live.ended')}</p>;
   } else if (unpaid || !active) {
     body = <p className="text-sm text-muted-foreground">{t('live.afterPayment')}</p>;
-  } else if (!booking.meeting_url) {
-    body = <p className="text-sm text-muted-foreground">{t('live.linkSoon')}</p>;
   } else if (now < opensAt) {
     const vars = { time: f.time(new Date(opensAt)), date: f.date(new Date(opensAt)) };
     body = (
@@ -117,6 +129,8 @@ function JoinLive({ booking, now }: { booking: Booking; now: number }) {
         </p>
       </>
     );
+  } else if (!booking.meeting_url) {
+    body = <p className="text-sm text-muted-foreground">{t('live.linkSoon')}</p>;
   } else {
     body = (
       <>
@@ -130,12 +144,16 @@ function JoinLive({ booking, now }: { booking: Booking; now: number }) {
           {t('live.join')}
         </Button>
         <p className="mt-2 text-sm text-muted-foreground">{t('live.newTab')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('live.waitingHost')}</p>
       </>
     );
   }
   return (
     <Panel id="live-h" title={t('live.title')}>
       {body}
+      {active && !unpaid && booking.booking_status !== 'completed' && now <= end + LIVE_ENDS_AFTER_MS && (
+        <OnlinePujaHelp bookingId={booking.id} className="mt-4" />
+      )}
     </Panel>
   );
 }
@@ -158,7 +176,14 @@ function Detail() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [editingReview, setEditingReview] = useState(false);
   const tc = useT('customer');
+  const tchat = useT('chat');
   const now = useNow(30_000);
+  // Pick up the link when it opens, and a new one if Pandit ji replaces it.
+  const refreshLive = liveRefreshDue(q.data, now);
+  const reloadBooking = q.reload;
+  useEffect(() => {
+    if (refreshLive) reloadBooking();
+  }, [refreshLive, now, reloadBooking]);
 
   if (wrongRole) return <CustomerOnly />;
   if (!ready || (q.loading && !q.data)) return <DiyaLoader label={t('detail.loading')} />;
@@ -405,6 +430,15 @@ function Detail() {
             </Panel>
 
             {online && <JoinLive booking={b} now={now} />}
+
+            {(b.payment_status === 'paid' || b.payment_status === 'refunded') && (
+              <div id="chat" className="scroll-mt-24">
+                <Panel id="chat-h" title={tchat('titleWith', { name: panditName })}>
+                  {!cancelled && !completed && <CallButton bookingId={b.id} token={token} className="mb-5" />}
+                  <ChatPanel bookingId={b.id} token={token} otherName={panditName} />
+                </Panel>
+              </div>
+            )}
 
             <Panel id="sankalp-h" title={t('detail.sankalp')}>
               {sankalp && sankalp.devotee_name ? (

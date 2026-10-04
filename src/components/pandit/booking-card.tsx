@@ -10,9 +10,10 @@ import {
   MapPin,
   MessageSquareText,
   Package,
-  Phone,
   Play,
+  RefreshCw,
   ScrollText,
+  TriangleAlert,
   Video,
   XCircle,
 } from 'lucide-react';
@@ -31,6 +32,10 @@ import { PujaIcon } from '@/components/common/puja-icon';
 import { ConfirmDialog } from '@/components/dashboard/confirm-dialog';
 import { errorMessage } from '@/components/dashboard/use-api';
 import { CompleteWithCodeDialog } from './complete-dialog';
+import { CallButton } from '@/components/booking/call-button';
+import { ChatPanel } from '@/components/booking/chat-panel';
+import { OnlinePujaHelp } from '@/components/booking/online-help';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { PayoutStatus } from '@/lib/types';
 
 const PAYOUT_CLS: Record<Exclude<PayoutStatus, 'not_due'>, string> = {
@@ -55,7 +60,10 @@ function PayoutBadge({ status }: { status: Exclude<PayoutStatus, 'not_due'> }) {
   );
 }
 
-type Action = 'confirm' | 'start' | 'complete' | 'cancel';
+type Action = 'confirm' | 'start' | 'complete' | 'cancel' | 'meeting';
+
+/** Matches the backend: the room can be replaced until 30 minutes after the end. */
+const MEETING_CLOSES_AFTER_MS = 30 * 60_000;
 
 const mapsUrl = (lat: number, lng: number) =>
   `https://www.google.com/maps/search/?api=1&query=${Number(lat)},${Number(lng)}`;
@@ -69,13 +77,25 @@ export function PanditBookingCard({
   token,
   onChanged,
   compact = false,
+  chatOpen = false,
+  onChatOpenChange,
 }: {
   booking: Booking;
   token: string | null;
   onChanged: (updated: Booking | null) => void;
   compact?: boolean;
+  /** Controlled chat drawer (e.g. opened from a notification link). */
+  chatOpen?: boolean;
+  onChatOpenChange?: (open: boolean) => void;
 }) {
   const t = useT('pandit');
+  const tchat = useT('chat');
+  const [ownChatOpen, setOwnChatOpen] = useState(false);
+  const showChat = chatOpen || ownChatOpen;
+  const setShowChat = (o: boolean) => {
+    setOwnChatOpen(o);
+    if (!o) onChatOpenChange?.(false);
+  };
   const ts = useT('samagri');
   const f = useFormat();
   const { locale } = useLocale();
@@ -122,6 +142,13 @@ export function PanditBookingCard({
     }
   };
 
+  // Paid online puja whose room is still usable: show the host steps and allow a new link.
+  const meetingLive =
+    b.booking_type === 'online' &&
+    b.payment_status === 'paid' &&
+    (b.booking_status === 'confirmed' || b.booking_status === 'in_progress') &&
+    now <= new Date(b.end_time).getTime() + MEETING_CLOSES_AFTER_MS;
+
   const s = b.sankalp;
   const family = (s?.family_members ?? []).filter(Boolean);
   const status = b.booking_status;
@@ -158,18 +185,6 @@ export function PanditBookingCard({
           <p className="mt-0.5 text-sm">
             <span className="text-muted-foreground">{t('card.familyLabel')}</span>{' '}
             <span className="font-medium">{b.customer?.name ?? t('card.familyFallback')}</span>
-            {b.customer?.mobile && (
-              <>
-                {' · '}
-                <a
-                  href={`tel:${b.customer.mobile}`}
-                  className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
-                >
-                  <Phone className="size-3.5" aria-hidden="true" />
-                  {b.customer.mobile}
-                </a>
-              </>
-            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
@@ -224,18 +239,42 @@ export function PanditBookingCard({
               {b.booking_type === 'online' ? t('card.online') : t('card.atHome')}
             </p>
             {b.booking_type === 'online' ? (
-              b.meeting_url ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={<a href={b.meeting_url} target="_blank" rel="noopener noreferrer" />}
-                  nativeButton={false}
-                >
-                  <Video aria-hidden="true" /> {t('card.openMeeting')}
-                </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground">{t('card.meetingSoon')}</p>
-              )
+              <div className="grid gap-3">
+                {b.meeting_url ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={<a href={b.meeting_url} target="_blank" rel="noopener noreferrer" />}
+                      nativeButton={false}
+                    >
+                      <Video aria-hidden="true" /> {t('card.openMeeting')}
+                    </Button>
+                    {meetingLive && (
+                      <Button variant="ghost" size="sm" onClick={() => setDialog('meeting')}>
+                        <RefreshCw aria-hidden="true" /> {t('card.meeting.regenerate')}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t('card.meetingSoon')}</p>
+                )}
+                {meetingLive && (
+                  <div className="rounded-lg bg-diya/15 p-3 text-sm ring-1 ring-diya/60">
+                    <p className="flex items-center gap-1.5 font-semibold text-heading">
+                      <TriangleAlert className="size-4 shrink-0 text-sindoor" aria-hidden="true" />
+                      {t('card.meeting.loginTitle')}
+                    </p>
+                    <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+                      <li>{t('card.meeting.step1')}</li>
+                      <li className="font-medium">{t('card.meeting.step2')}</li>
+                      <li>{t('card.meeting.step3')}</li>
+                      <li>{t('card.meeting.step4')}</li>
+                    </ol>
+                  </div>
+                )}
+                {meetingLive && <OnlinePujaHelp bookingId={b.id} />}
+              </div>
             ) : b.address ? (
               <div className="text-sm">
                 <p>
@@ -352,6 +391,36 @@ export function PanditBookingCard({
         </div>
       )}
 
+      {/* Contact: call (from 5 hours before) and chat, once paid */}
+      {(b.payment_status === 'paid' || b.payment_status === 'refunded') && (
+        <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+          {status === 'confirmed' || status === 'in_progress' ? (
+            <CallButton bookingId={b.id} token={token} />
+          ) : (
+            <span />
+          )}
+          <Button variant="outline" size="lg" className="w-full sm:w-fit" onClick={() => setShowChat(true)}>
+            <MessageSquareText aria-hidden="true" /> {tchat('open')}
+          </Button>
+        </div>
+      )}
+
+      <Sheet open={showChat} onOpenChange={setShowChat}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>{tchat('titleWith', { name: b.customer?.name ?? t('card.familyFallback') })}</SheetTitle>
+            <SheetDescription>
+              {pujaName} · {f.date(b.start_time, { weekday: undefined })}, {f.time(b.start_time)}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-6">
+            {showChat && (
+              <ChatPanel bookingId={b.id} token={token} otherName={b.customer?.name} autoFocus />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Actions */}
       {(status === 'pending' || status === 'confirmed' || status === 'in_progress') && (
         <div className="flex flex-col gap-2 border-t bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:px-5">
@@ -416,6 +485,14 @@ export function PanditBookingCard({
         description={t('card.dialog.accept.desc', { puja: pujaName, date: f.date(b.start_time), time: f.time(b.start_time) })}
         confirmLabel={t('card.accept')}
         onConfirm={() => act('confirm')}
+      />
+      <ConfirmDialog
+        open={dialog === 'meeting'}
+        onOpenChange={(o) => !o && setDialog(null)}
+        title={t('card.dialog.meeting.title')}
+        description={t('card.dialog.meeting.desc')}
+        confirmLabel={t('card.meeting.regenerate')}
+        onConfirm={() => act('meeting')}
       />
       <ConfirmDialog
         open={dialog === 'start'}
