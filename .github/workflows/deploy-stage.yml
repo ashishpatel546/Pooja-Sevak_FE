@@ -1,0 +1,85 @@
+name: Deploy web to stage
+
+# Builds the Next.js image on the runner, pushes it to GHCR and rolls it out on the
+# stage VM (https://pujasevak.appme.in). NEXT_PUBLIC_* values are inlined at build
+# time, so they come from the `stage` environment's variables. deploy.sh on the VM
+# pulls the image, checks the site and rolls back if it is not healthy.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-stage-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/pooja-sevak-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: stage
+    outputs:
+      image: ${{ env.IMAGE }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:stage
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: stage
+    steps:
+      - name: Roll out on stage VM
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.STAGE_HOST }}
+          username: ${{ secrets.STAGE_USER }}
+          key: ${{ secrets.STAGE_SSH_KEY }}
+          envs: IMAGE,GHCR_USER,GHCR_TOKEN
+          command_timeout: 15m
+          script: |
+            set -e
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+            trap 'docker logout ghcr.io >/dev/null' EXIT
+            ~/pooja-sevak-stage/deploy/deploy.sh frontend "$IMAGE"
+
+      - name: Public check
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://pujasevak.appme.in/)
+            [ "$code" = 200 ] && { echo "Site reachable (200)"; exit 0; }
+            sleep 3
+          done
+          echo "Site not reachable publicly (last code $code)"; exit 1
