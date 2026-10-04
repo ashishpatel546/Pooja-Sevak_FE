@@ -1,169 +1,85 @@
-'use client';
-
-import { Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { HandHeart, ListChecks, NotebookPen, RefreshCw, Video, VideoOff } from 'lucide-react';
-import type { PanditListItem, ServiceDefinition } from '@/lib/types';
-import { applyBookingDate, NO_BOOKING_DATE, readBookingDate } from '@/lib/booking-date';
-import { BookingDateBanner } from '@/components/customer/booking-date-banner';
-import { pick, useLocale, useT } from '@/i18n';
-import { EmptyState } from '@/components/common/empty-state';
-import { PageHeader, PageShell } from '@/components/common/page-header';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PanditCard, PanditCardSkeleton } from '@/components/customer/pandit-card';
-import { ServiceSelect } from '@/components/customer/service-select';
-import { TimezoneNote } from '@/components/customer/timezone-note';
-import { useApiQuery } from '@/components/customer/use-api';
+import { ChevronDown, Video } from 'lucide-react';
+import { getLocale, getT } from '@/i18n/server';
+import { pick } from '@/i18n/translate';
+import { PageShell } from '@/components/common/page-header';
+import { JsonLd } from '@/components/seo/json-ld';
+import { fetchCatalogList } from '@/lib/seo/data';
+import { breadcrumbSchema, faqPageSchema } from '@/lib/seo/schema';
+import { OnlineClient } from './online-client';
 
-const STEPS = [
-  { icon: ListChecks, title: 'online.step1.title', text: 'online.step1.text' },
-  { icon: NotebookPen, title: 'online.step2.title', text: 'online.step2.text' },
-  { icon: Video, title: 'online.step3.title', text: 'online.step3.text' },
-  { icon: HandHeart, title: 'online.step4.title', text: 'online.step4.text' },
-] as const;
+// Server-rendered below the interactive list so search engines always get the
+// pujas offered online (internal links) and the online-puja FAQ (FAQPage).
+const FAQ_IDS = ['what', 'which', 'join', 'abroad', 'sankalp', 'prasad'] as const;
 
-function Online() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const serviceId = params.get('service');
-  const bookingDate = readBookingDate(params);
-  const clearDateHref = (() => {
-    const qs = applyBookingDate(new URLSearchParams(params.toString()), NO_BOOKING_DATE).toString();
-    return qs ? `${pathname}?${qs}` : pathname;
-  })();
-  const t = useT('customer');
-  const tc = useT('common');
-  const { locale } = useLocale();
-  const services = useApiQuery<ServiceDefinition[]>('/service-definitions');
-  const pandits = useApiQuery<PanditListItem[]>('/pandits/browse', {
-    query: { online: true, service_definition_id: serviceId ?? undefined },
-  });
-  const selected = services.data?.find((s) => s.id === serviceId);
-  const selectedName = selected ? pick(selected, 'name', locale) : null;
-
-  const setService = (id: string | null) => {
-    const next = new URLSearchParams(params.toString());
-    if (id) next.set('service', id);
-    else next.delete('service');
-    const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
+export default async function OnlinePage() {
+  const [t, ts, locale, catalog] = await Promise.all([
+    getT('customer'),
+    getT('seo'),
+    getLocale(),
+    fetchCatalogList(),
+  ]);
+  const online = (catalog ?? []).filter((p) => p.supports_online && p.is_active !== false);
+  const faq = FAQ_IDS.map((id) => ({ id, question: t(`online.faq.${id}.q`), answer: t(`online.faq.${id}.a`) }));
 
   return (
-    <PageShell size="wide">
-      <PageHeader
-        title={t('online.title')}
-        description={t('online.description')}
+    <>
+      <JsonLd
+        data={[
+          breadcrumbSchema(
+            [
+              { name: ts('breadcrumb.home'), path: '/' },
+              { name: t('online.breadcrumb'), path: '/online' },
+            ],
+            locale,
+          ),
+          faqPageSchema(faq, locale, '/online'),
+        ]}
       />
-      <BookingDateBanner ctx={bookingDate} clearHref={clearDateHref} className="mb-6" />
-
-      <section aria-labelledby="how-h" className="rounded-2xl border bg-chandan p-5 sm:p-8">
-        <h2 id="how-h" className="text-2xl">
-          {t('online.howTitle')}
-        </h2>
-        <ol className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="flex min-w-0 gap-4 lg:flex-col lg:gap-3">
-              <span className="flex items-center gap-3">
-                <span
-                  className="grid size-10 shrink-0 place-items-center rounded-full bg-primary font-heading text-lg text-primary-foreground"
-                  aria-hidden="true"
-                >
-                  {i + 1}
-                </span>
-                <s.icon className="hidden size-5 text-primary lg:block" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block font-medium text-heading">{t(s.title)}</span>
-                <span className="mt-1 block text-sm text-muted-foreground">{t(s.text)}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-6 text-sm text-muted-foreground">{t('online.prasad')}</p>
-      </section>
-
-      <section aria-labelledby="online-pandits-h" className="mt-12">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h2 id="online-pandits-h" className="text-2xl text-balance sm:text-3xl">
-              {t('online.panditsTitle')}
+      <OnlineClient />
+      <PageShell size="wide" className="pt-0 sm:pt-0">
+        {online.length > 0 && (
+          <section aria-labelledby="online-pujas-h">
+            <h2 id="online-pujas-h" className="text-2xl text-balance sm:text-3xl">
+              {t('online.pujasTitle')}
             </h2>
-            <TimezoneNote className="mt-2" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="online-service">{t('service.label')}</Label>
-            {services.loading ? (
-              <Skeleton className="h-11 w-full rounded-lg sm:w-72" />
-            ) : (
-              <ServiceSelect
-                id="online-service"
-                services={services.data ?? []}
-                value={serviceId}
-                onChange={setService}
-                onlineOnly
-              />
-            )}
-          </div>
-        </div>
-
-        <div aria-live="polite" aria-busy={pandits.loading}>
-          {pandits.loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
-              {[0, 1, 2].map((i) => (
-                <PanditCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : pandits.error ? (
-            <EmptyState
-              icon={RefreshCw}
-              title={t('pandits.loadError')}
-              action={<Button onClick={pandits.reload}>{tc('action.retry')}</Button>}
-            >
-              {pandits.error}
-            </EmptyState>
-          ) : !pandits.data || pandits.data.length === 0 ? (
-            <EmptyState
-              icon={VideoOff}
-              title={selectedName ? t('online.noneFor', { puja: selectedName }) : t('online.none')}
-              action={
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  {selected && (
-                    <Button variant="outline" onClick={() => setService(null)}>
-                      {t('online.showAll')}
-                    </Button>
-                  )}
-                  <Button render={<Link href="/browse" />} nativeButton={false}>
-                    {t('online.findNear')}
-                  </Button>
-                </div>
-              }
-            >
-              {t('online.emptyHint')}
-            </EmptyState>
-          ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {pandits.data.map((p) => (
+            <p className="mt-2 max-w-[70ch] text-muted-foreground">{t('online.pujasLead')}</p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {online.map((p) => (
                 <li key={p.id} className="flex min-w-0">
-                  <PanditCard pandit={p} serviceDefinitionId={serviceId} bookingDate={bookingDate} online className="w-full" />
+                  <Link
+                    href={`/pujas/${encodeURIComponent(p.slug)}`}
+                    className="flex min-h-14 w-full min-w-0 items-center gap-3 rounded-xl border bg-card px-4 py-3 font-medium text-heading transition-colors hover:border-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                  >
+                    <Video className="size-5 shrink-0 text-primary" aria-hidden="true" />
+                    <span className="min-w-0">{t('online.pujaLink', { puja: pick(p, 'name', locale) })}</span>
+                  </Link>
                 </li>
               ))}
             </ul>
-          )}
-        </div>
-      </section>
-    </PageShell>
-  );
-}
+          </section>
+        )}
 
-export default function OnlinePage() {
-  return (
-    <Suspense fallback={<PageShell size="wide"><Skeleton className="h-64 rounded-2xl" /></PageShell>}>
-      <Online />
-    </Suspense>
+        <section aria-labelledby="online-faq-h" className="mt-12 max-w-[70ch]">
+          <h2 id="online-faq-h" className="text-2xl sm:text-3xl">
+            {t('online.faqTitle')}
+          </h2>
+          <div className="mt-4 divide-y rounded-2xl border bg-card">
+            {faq.map((f) => (
+              <details key={f.id} id={`online-${f.id}`} className="group scroll-mt-24 px-5">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 font-medium text-heading marker:hidden focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+                  <span>{f.question}</span>
+                  <ChevronDown
+                    className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
+                </summary>
+                <p className="pb-5 leading-relaxed text-foreground/90">{f.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </PageShell>
+    </>
   );
 }

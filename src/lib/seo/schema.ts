@@ -174,13 +174,17 @@ export function panditSchema(p: PanditPublic, locale: Locale, o: { brand: string
   });
 }
 
-/** FAQPage from plain-text question/answer pairs (the same text shown on the page). */
-export function faqPageSchema(items: { question: string; answer: string }[], locale: Locale): Thing {
+/** FAQPage from plain-text question/answer pairs (the same text shown on the page at `path`). */
+export function faqPageSchema(
+  items: { question: string; answer: string }[],
+  locale: Locale,
+  path = '/faq',
+): Thing {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     inLanguage: locale === 'hi' ? 'hi-IN' : 'en-IN',
-    url: absoluteUrl(withLang('/faq', locale)),
+    url: absoluteUrl(withLang(path, locale)),
     mainEntity: items.map((it) => ({
       '@type': 'Question',
       name: it.question,

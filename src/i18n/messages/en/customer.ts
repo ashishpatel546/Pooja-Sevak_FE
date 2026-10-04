@@ -1,9 +1,9 @@
 // English strings for the "customer" namespace. Flat keys; {name} placeholders are interpolated.
 const customer = {
   // Metadata
-  'meta.online.title': 'Online puja',
+  'meta.online.title': 'Online puja booking — live video puja with a verified pandit',
   'meta.online.description':
-    'Live online puja with a verified pandit — share your family’s sankalp and join from anywhere in the world.',
+    'Book an online puja with a verified pandit ji — Satyanarayan Katha, Rudrabhishek, Mahamrityunjay Jaap and more, live on video with your family’s sankalp, from anywhere.',
   'meta.browse.title': 'Pandits near you',
   'meta.browse.description':
     'Find verified pandits who travel to your home, with clear dakshina and real availability.',
@@ -222,6 +222,30 @@ const customer = {
   'online.showAll': 'Show all online pujas',
   'online.findNear': 'Find a pandit near you',
   'online.emptyHint': 'More pandits are joining every week. Choose your location to see who can come to your home.',
+  'online.breadcrumb': 'Online puja',
+  'online.pujasTitle': 'Pujas you can book online',
+  'online.pujasLead':
+    'Each of these pujas can be performed live on video, with your family’s names and gotra in the sankalp.',
+  'online.pujaLink': '{puja} online',
+  'online.faqTitle': 'Online puja: common questions',
+  'online.faq.what.q': 'What is an online puja?',
+  'online.faq.what.a':
+    'A verified pandit ji performs the complete puja vidhi while you and your family join live on video. The sankalp is taken in your family’s names and gotra, just as it would be in person.',
+  'online.faq.which.q': 'Which pujas can be done online?',
+  'online.faq.which.a':
+    'Pujas centred on the sankalp, path or jaap work well online, such as Satyanarayan Katha, Rudrabhishek, Mahamrityunjay Jaap, Sundarkand Path and Navgraha Shanti. Rites that need the pandit at your home or venue, like Griha Pravesh or Vivah, are booked as home visits.',
+  'online.faq.join.q': 'How do I join the online puja?',
+  'online.faq.join.a':
+    'A private video link appears on your booking 15 minutes before the muhurat. Open it on your phone or computer and sit with your family to follow along.',
+  'online.faq.abroad.q': 'Can family living outside India join?',
+  'online.faq.abroad.a':
+    'Yes. Online pujas are open to devotees anywhere in the world, and puja times are shown in your own time zone.',
+  'online.faq.sankalp.q': 'What details does the pandit need for the sankalp?',
+  'online.faq.sankalp.a':
+    'The devotee’s name, gotra (family lineage) and, if you know it, nakshatra (birth star). You add these while booking.',
+  'online.faq.prasad.q': 'Will I receive prasad?',
+  'online.faq.prasad.a':
+    'Prasad is not shipped for online pujas. Your pandit ji can suggest a simple offering to keep at home during the puja.',
   'pandits.loadError': 'We could not load pandits right now',
 
   // /browse
