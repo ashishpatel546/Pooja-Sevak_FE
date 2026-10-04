@@ -1,12 +1,13 @@
 name: Deploy web to stage
 
+# Runs on every push/merge to `development`.
 # Builds the Next.js image on the runner, pushes it to GHCR and rolls it out on the
 # stage VM (https://pujasevak.appme.in). NEXT_PUBLIC_* values are inlined at build
 # time, so they come from the `stage` environment's variables. deploy.sh on the VM
 # pulls the image, checks the site and rolls back if it is not healthy.
 on:
   push:
-    branches: [main]
+    branches: [development]
   workflow_dispatch:
 
 concurrency:
