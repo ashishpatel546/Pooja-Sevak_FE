@@ -4,12 +4,28 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import type { NotificationList } from '@/lib/types';
 
-const POLL_MS = 60_000;
+/**
+ * Polling is only a fallback now that new notifications arrive by Web Push, so
+ * it is slow, and every delay is randomised (±20 %) so that clients that loaded
+ * at the same moment (e.g. after a deploy) drift apart instead of hitting the
+ * API in lockstep.
+ */
+const POLL_MS = 5 * 60_000;
+const POLL_JITTER = 0.2;
+/** Focus / tab switches refetch only when the data is older than this. */
+const STALE_MS = 60_000;
+/** A push can reach many open tabs at once; spread their refetches over this window. */
+const PUSH_REFRESH_SPREAD_MS = 3_000;
+
+function nextPollDelay(): number {
+  return POLL_MS * (1 - POLL_JITTER + Math.random() * 2 * POLL_JITTER);
+}
 
 /**
- * In-app notifications for the signed-in user. Fetches on mount, every 60 s
- * while the tab is visible, and whenever the window regains focus.
- * Mount it keyed by user id so a different account never sees stale data.
+ * In-app notifications for the signed-in user. Fetches on mount, about every
+ * 5 minutes while the tab is visible, when the window regains focus (if stale)
+ * and shortly after a Web Push arrives. Mount it keyed by user id so a
+ * different account never sees stale data.
  */
 export function useNotifications(token: string | null) {
   const [data, setData] = useState<NotificationList | null>(null);
@@ -17,6 +33,8 @@ export function useNotifications(token: string | null) {
   /** Time of the last response, used to render relative times without calling Date.now() in render. */
   const [fetchedAt, setFetchedAt] = useState(0);
   const seq = useRef(0);
+  /** Wall-clock time of the last completed fetch (ref: read inside timers). */
+  const lastFetch = useRef(0);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -30,25 +48,47 @@ export function useNotifications(token: string | null) {
       if (id !== seq.current) return;
       setError(true);
     }
-    setFetchedAt(Date.now());
+    lastFetch.current = Date.now();
+    setFetchedAt(lastFetch.current);
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') void load();
+    const visible = () => document.visibilityState === 'visible';
+    const refreshIfStale = () => {
+      if (visible() && Date.now() - lastFetch.current >= STALE_MS) void load();
     };
     // load() only sets state after the network response (an external system),
     // never synchronously, so this doesn't cause a cascading render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
-    const timer = window.setInterval(refreshIfVisible, POLL_MS);
-    window.addEventListener('focus', refreshIfVisible);
-    document.addEventListener('visibilitychange', refreshIfVisible);
+
+    let pollTimer = 0;
+    const schedule = () => {
+      pollTimer = window.setTimeout(() => {
+        if (visible()) void load();
+        schedule();
+      }, nextPollDelay());
+    };
+    schedule();
+
+    let pushTimer = 0;
+    const onWorkerMessage = (e: MessageEvent) => {
+      if ((e.data as { type?: string } | null)?.type !== 'notifications:changed') return;
+      window.clearTimeout(pushTimer);
+      pushTimer = window.setTimeout(() => void load(), Math.random() * PUSH_REFRESH_SPREAD_MS);
+    };
+    const worker = 'serviceWorker' in navigator ? navigator.serviceWorker : null;
+
+    window.addEventListener('focus', refreshIfStale);
+    document.addEventListener('visibilitychange', refreshIfStale);
+    worker?.addEventListener('message', onWorkerMessage);
     return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('focus', refreshIfVisible);
-      document.removeEventListener('visibilitychange', refreshIfVisible);
+      window.clearTimeout(pollTimer);
+      window.clearTimeout(pushTimer);
+      window.removeEventListener('focus', refreshIfStale);
+      document.removeEventListener('visibilitychange', refreshIfStale);
+      worker?.removeEventListener('message', onWorkerMessage);
     };
   }, [token, load]);
 
