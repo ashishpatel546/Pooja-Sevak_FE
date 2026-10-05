@@ -676,6 +676,7 @@ export type FamilyProfile = {
 export type Paksha = 'shukla' | 'krishna';
 
 export type ObservanceKey =
+  | 'festival'
   | 'purnima'
   | 'amavasya'
   | 'ekadashi'
@@ -685,6 +686,36 @@ export type ObservanceKey =
   | 'sankranti'
   | 'pitru_paksha'
   | 'sarva_pitru_amavasya';
+
+/** Festivals the panchang computes (backend: panchang/engine/festivals.ts). */
+export type FestivalId =
+  | 'makar_sankranti'
+  | 'vasant_panchami'
+  | 'maha_shivratri'
+  | 'holika_dahan'
+  | 'holi'
+  | 'chaitra_navratri'
+  | 'gudi_padwa'
+  | 'ram_navami'
+  | 'hanuman_jayanti'
+  | 'akshaya_tritiya'
+  | 'vat_savitri'
+  | 'guru_purnima'
+  | 'nag_panchami'
+  | 'raksha_bandhan'
+  | 'janmashtami'
+  | 'hartalika_teej'
+  | 'ganesh_chaturthi'
+  | 'anant_chaturdashi'
+  | 'sharad_navratri'
+  | 'durga_ashtami'
+  | 'dussehra'
+  | 'karwa_chauth'
+  | 'dhanteras'
+  | 'diwali'
+  | 'govardhan_puja'
+  | 'bhai_dooj'
+  | 'chhath_puja';
 
 export type Observance = {
   key: ObservanceKey;
@@ -699,6 +730,11 @@ export type Observance = {
   lunar_month_en: string | null; // amanta month, e.g. 'Bhadrapada'
   lunar_month_hi: string | null;
   suggested_puja_slugs: string[];
+  /**
+   * Set on festivals: every key 'festival' observance, and recurring ones that
+   * are also festivals (Makar Sankranti, Maha Shivratri).
+   */
+  festival?: FestivalId | null;
 };
 
 /** Where a panchang is computed: civil dates, sunrise and tithi are local to this place. */
@@ -770,6 +806,7 @@ export type UpcomingReminder = {
   end_date: string | null;
   kind: 'observance' | 'remembrance';
   observance_key: ObservanceKey | null;
+  festival?: FestivalId | null;
   remembrance_id: string | null;
   title_en: string;
   title_hi: string;

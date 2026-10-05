@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Mandala } from '@/components/brand/mandala';
 import { MoonPhase } from '@/components/ritual/moon-phase';
 import { ObservanceIcon } from '@/components/ritual/observance-icon';
-import { isOnDay, pakshaOf } from '@/components/ritual/observance';
+import { isOnDay, observanceId, pakshaOf } from '@/components/ritual/observance';
 import { PlaceControl } from '@/components/ritual/place-control';
 import { useDays } from '@/components/ritual/use-days';
 import { usePanchangText } from '@/components/ritual/use-panchang-text';
@@ -176,7 +176,7 @@ export function PanchangGlance({
             <ul className="mt-5 flex flex-wrap gap-2" aria-label={tp('hero.todayIs')}>
               {day.observances.map((o) => (
                 <li
-                  key={`${o.key}-${o.date}`}
+                  key={observanceId(o)}
                   className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-chandan px-3 text-sm text-foreground ring-1 ring-diya/40"
                 >
                   <Sparkles className="size-3.5 text-sindoor" aria-hidden="true" />
@@ -194,8 +194,8 @@ export function PanchangGlance({
               <h3 className="font-sans text-sm font-semibold text-muted-foreground">{t('glance.next')}</h3>
               <ul className="mt-2 divide-y divide-border">
                 {next.map((o) => (
-                  <li key={`${o.key}-${o.date}`} className="flex items-center gap-3 py-2.5">
-                    <ObservanceIcon observanceKey={o.key} tithi={o.tithi} size="sm" />
+                  <li key={observanceId(o)} className="flex items-center gap-3 py-2.5">
+                    <ObservanceIcon observanceKey={o.key} festival={o.festival} tithi={o.tithi} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate leading-snug font-medium text-foreground">
                         {text(o, 'name') || typeName(o.key)}

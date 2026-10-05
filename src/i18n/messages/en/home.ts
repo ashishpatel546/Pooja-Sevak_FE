@@ -38,6 +38,11 @@ const home = {
   'occasion.pitru.puja': 'Pitru Paksha Shraddh',
   'occasion.pitru.note': 'Tarpan and offerings so they are honoured and at peace.',
 
+  'festivals.titleMonth': 'Festivals in {month}',
+  'festivals.titleNext': 'Festivals coming up',
+  'festivals.lead': 'Dated by the panchang for {place}. Book a pandit early — festival days fill fast.',
+  'festivals.explore': 'Explore all festivals',
+
   'sacred.title': 'Pujas for the sacred days ahead',
   'sacred.lead':
     'Each sacred day has pujas families traditionally keep. Dates follow the panchang for {place}, so you can book Pandit-ji in good time.',

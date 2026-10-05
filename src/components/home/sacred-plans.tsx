@@ -9,7 +9,7 @@ import { observanceBookingDay, pujaHrefFor } from '@/lib/booking-date';
 import { dateKeyIn } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { ObservanceIcon } from '@/components/ritual/observance-icon';
-import { pujaName, type PujaNames } from '@/components/ritual/observance';
+import { observanceId, occasionOf, pujaName, type PujaNames } from '@/components/ritual/observance';
 import { useDays } from '@/components/ritual/use-days';
 import { usePanchangText } from '@/components/ritual/use-panchang-text';
 
@@ -55,11 +55,11 @@ export function SacredPlans({
         const day = observanceBookingDay(o, dateKeyIn(tz));
         return (
           <li
-            key={`${o.key}-${o.date}`}
+            key={observanceId(o)}
             className="flex min-w-0 flex-col rounded-2xl border border-diya/30 bg-card p-5 sm:p-6"
           >
             <div className="flex items-start gap-3">
-              <ObservanceIcon observanceKey={o.key} tithi={o.tithi} />
+              <ObservanceIcon observanceKey={o.key} festival={o.festival} tithi={o.tithi} />
               <div className="min-w-0">
                 <h3 className="font-sans text-lg leading-snug font-semibold text-foreground">{name}</h3>
                 <p className="text-sm text-muted-foreground" suppressHydrationWarning>
@@ -81,7 +81,7 @@ export function SacredPlans({
                 return (
                   <li key={slug}>
                     <Link
-                      href={pujaHrefFor(slug, day, o.key)}
+                      href={pujaHrefFor(slug, day, occasionOf(o))}
                       className="group flex min-h-11 items-center justify-between gap-3 rounded-md py-1.5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                       <span className="min-w-0 font-medium text-foreground group-hover:text-primary">
@@ -103,7 +103,7 @@ export function SacredPlans({
                 variant="outline"
                 size="lg"
                 className={cn('mt-4 w-full bg-card sm:w-auto sm:self-start')}
-                render={<Link href={pujaHrefFor(first, day, o.key)} />}
+                render={<Link href={pujaHrefFor(first, day, occasionOf(o))} />}
                 nativeButton={false}
                 aria-label={t('sacred.bookAria', {
                   puja: pujaName(first, pujaNames, locale),

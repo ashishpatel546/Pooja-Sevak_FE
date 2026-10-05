@@ -4,6 +4,7 @@ import type { Observance, ObservanceKey, Paksha, ServiceDefinition } from '@/lib
 
 /** Display order for filters and preference toggles. */
 export const OBSERVANCE_KEYS: ObservanceKey[] = [
+  'festival',
   'purnima',
   'amavasya',
   'ekadashi',
@@ -17,6 +18,7 @@ export const OBSERVANCE_KEYS: ObservanceKey[] = [
 
 /** Representative tithi (1–30) for drawing the moon when the API gives none. */
 export const TYPICAL_TITHI: Record<ObservanceKey, number> = {
+  festival: 15,
   purnima: 15,
   amavasya: 30,
   ekadashi: 11,
@@ -30,6 +32,13 @@ export const TYPICAL_TITHI: Record<ObservanceKey, number> = {
 
 export const PITRU_PAKSHA_SLUG = 'pitru-paksha-shraddh';
 
+/** The /panchang tab, from `?view=`. */
+export type PanchangView = 'all' | 'festivals';
+
+export function parsePanchangView(raw: unknown): PanchangView {
+  return raw === 'festivals' ? 'festivals' : 'all';
+}
+
 export function localized<T extends Record<string, unknown>>(obj: T, base: string, locale: Locale): string {
   const value = obj[`${base}_${locale}`] ?? obj[`${base}_en`];
   return typeof value === 'string' ? value : '';
@@ -38,6 +47,16 @@ export function localized<T extends Record<string, unknown>>(obj: T, base: strin
 /** True when `dateKey` (YYYY-MM-DD) falls on the observance or inside its range. */
 export function isOnDay(o: Pick<Observance, 'date' | 'end_date'>, dateKey: string): boolean {
   return o.date <= dateKey && dateKey <= (o.end_date ?? o.date);
+}
+
+/** Stable React key: several festivals can share a date (Hartalika Teej, Ganesh Chaturthi). */
+export function observanceId(o: Pick<Observance, 'key' | 'date' | 'festival'>): string {
+  return `${o.festival ?? o.key}-${o.date}`;
+}
+
+/** The occasion a "Book for this day" link carries; festivals have no single type name. */
+export function occasionOf(o: Pick<Observance, 'key'>): ObservanceKey | null {
+  return o.key === 'festival' ? null : o.key;
 }
 
 /** The Pitru Paksha observance in force on `today`, if any. */

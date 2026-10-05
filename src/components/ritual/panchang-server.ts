@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { serverApiBase } from '@/lib/api';
 import { dateKeyIn } from '@/lib/format';
 import { DEFAULT_PLACE, parsePlaceCookie, PLACE_COOKIE, placeQuery, samePlace, type Place } from '@/lib/place';
-import type { Observance, PanchangDay, ServiceDefinition } from '@/lib/types';
+import type { Observance, ObservanceKey, PanchangDay, ServiceDefinition } from '@/lib/types';
 
 // Public data, cached for an hour. Each call fails soft (null) so pages can
 // hide or replace the section when the API is unreachable.
@@ -42,8 +42,14 @@ export function fetchPanchangDay(date = todayKey(), place: Place = DEFAULT_PLACE
   return getJson<PanchangDay>('/panchang/day', { date, ...placeQuery(place) });
 }
 
-export async function fetchUpcoming(days: number, from = todayKey(), place: Place = DEFAULT_PLACE) {
-  const list = await getJson<Observance[]>('/panchang/upcoming', { from, days, ...placeQuery(place) });
+export async function fetchUpcoming(
+  days: number,
+  from = todayKey(),
+  place: Place = DEFAULT_PLACE,
+  keys?: ObservanceKey[],
+) {
+  const query = { from, days, ...placeQuery(place), ...(keys?.length ? { keys: keys.join(',') } : {}) };
+  const list = await getJson<Observance[]>('/panchang/upcoming', query);
   return Array.isArray(list) ? list : null;
 }
 
@@ -56,19 +62,26 @@ export type PanchangView = {
   today: string;
   day: PanchangDay | null;
   upcoming: Observance[] | null;
+  /** Festivals over the next `festivalDays` (null when not asked for or unavailable). */
+  festivals: Observance[] | null;
 };
 
 /**
- * Today's panchang and the next `days` of observances for the visitor's place.
- * If the API cannot answer for that place at all, falls back to Lucknow so the
- * page still has something true to show (and says so via `place`).
+ * Today's panchang and the next `days` of observances for the visitor's place,
+ * plus `festivalDays` of festivals when asked. If the API cannot answer for that
+ * place at all, falls back to Lucknow so the page still has something true to
+ * show (and says so via `place`).
  */
-export async function loadPanchang(days: number): Promise<PanchangView> {
+export async function loadPanchang(days: number, festivalDays = 0): Promise<PanchangView> {
   const requested = await getPlace();
   const load = async (place: Place) => {
     const today = todayKey(place.tz);
-    const [day, upcoming] = await Promise.all([fetchPanchangDay(today, place), fetchUpcoming(days, today, place)]);
-    return { place, today, day, upcoming };
+    const [day, upcoming, festivals] = await Promise.all([
+      fetchPanchangDay(today, place),
+      fetchUpcoming(days, today, place),
+      festivalDays > 0 ? fetchUpcoming(festivalDays, today, place, ['festival']) : null,
+    ]);
+    return { place, today, day, upcoming, festivals };
   };
   const view = await load(requested);
   if (!view.day && !view.upcoming && !samePlace(requested, DEFAULT_PLACE)) {

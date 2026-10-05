@@ -104,6 +104,7 @@ const reminders = {
   'prefs.placeCurrent': 'Reminders follow {place}',
   'prefs.placeUnset': 'Not set yet — we use Indian Standard Time until you choose.',
   'prefs.noChannel': 'All channels are off, so no reminders will reach you. Turn one on to hear from us.',
+  'prefs.desc.festival': 'Diwali, Holi, Navratri, Janmashtami and the other great festivals.',
   'prefs.desc.purnima': 'Full moon. Satyanarayan Katha and gratitude.',
   'prefs.desc.amavasya': 'New moon. Tarpan for the ancestors.',
   'prefs.desc.ekadashi': 'The eleventh day, twice a month. Vrat for Vishnu.',

@@ -40,6 +40,11 @@ const home: Record<keyof typeof en, string> = {
   'occasion.pitru.puja': 'पितृ पक्ष श्राद्ध',
   'occasion.pitru.note': 'तर्पण और अर्पण, ताकि उन्हें सम्मान और शांति मिले।',
 
+  'festivals.titleMonth': '{month} के त्योहार',
+  'festivals.titleNext': 'आने वाले त्योहार',
+  'festivals.lead': '{place} के पंचांग के अनुसार तिथियाँ। पंडित जी पहले से बुक करें — त्योहारों पर दिन जल्दी भर जाते हैं।',
+  'festivals.explore': 'सभी त्योहार देखें',
+
   'sacred.title': 'आने वाले पावन दिनों की पूजाएँ',
   'sacred.lead':
     'हर पावन दिन से कुछ पूजाएँ परंपरा से जुड़ी हैं। तिथियाँ {place} के पंचांग से हैं, ताकि आप समय रहते पंडित जी बुक कर सकें।',

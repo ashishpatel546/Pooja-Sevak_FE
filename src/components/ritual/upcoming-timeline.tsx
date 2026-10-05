@@ -52,7 +52,8 @@ function BookLink({
   const slug = item.suggested_puja_slugs[0];
   const puja = pujaName(slug, names, locale);
   // Civil date in the reminder place's zone, carried as-is (see lib/booking-date.ts).
-  const href = pujaHrefFor(slug, observanceBookingDay(item, dateKeyIn(tz ?? IST_ZONE)), item.observance_key);
+  const occasion = item.observance_key === 'festival' ? null : item.observance_key;
+  const href = pujaHrefFor(slug, observanceBookingDay(item, dateKeyIn(tz ?? IST_ZONE)), occasion);
   if (emphasis) {
     return (
       <Button size="lg" render={<Link href={href} />} nativeButton={false} className="w-full sm:w-auto">
@@ -108,7 +109,7 @@ export function UpcomingTimeline({
           {t('upcoming.next')} · {n.relative}
         </p>
         <div className="mt-3 flex items-start gap-4">
-          <ObservanceIcon observanceKey={next.observance_key} size="lg" />
+          <ObservanceIcon observanceKey={next.observance_key} festival={next.festival} size="lg" />
           <div className="min-w-0">
             <h2
               id="next-title"
@@ -140,11 +141,11 @@ export function UpcomingTimeline({
               const d = describe(r);
               return (
                 <li
-                  key={`${r.kind}-${r.observance_key ?? r.remembrance_id}-${r.date}`}
+                  key={`${r.kind}-${r.festival ?? r.observance_key ?? r.remembrance_id}-${r.date}`}
                   className="relative grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 py-4"
                 >
                   <span className="-ml-[1.125rem]">
-                    <ObservanceIcon observanceKey={r.observance_key} size="sm" className="bg-background" />
+                    <ObservanceIcon observanceKey={r.observance_key} festival={r.festival} size="sm" className="bg-background" />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm text-muted-foreground">
