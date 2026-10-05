@@ -27,6 +27,7 @@ import {
   takeLegacySession,
   writeProfile,
 } from './session';
+import { disablePush } from './push';
 import type { AuthResponse, AuthUser, Role } from './types';
 
 export type { Role, AuthUser } from './types';
@@ -225,6 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Before the token is dropped: this browser must stop getting this account's pushes.
+    void disablePush(token);
     void logoutRequest();
     clearSession();
     forget();

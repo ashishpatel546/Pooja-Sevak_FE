@@ -8,6 +8,7 @@ import {
   BellRing,
   CalendarCheck,
   CalendarX,
+  BellOff,
   CheckCheck,
   IndianRupee,
   Star,
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Diya } from '@/components/brand/diya';
 import { useNotifications } from './use-notifications';
+import { usePush } from './use-push';
 
 function iconFor(type: string): LucideIcon {
   if (/cancel/.test(type)) return CalendarX;
@@ -53,6 +55,7 @@ export function NotificationBell({ token }: { token: string }) {
   const [open, setOpen] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const { items, unread, loaded, error, fetchedAt, reload, markRead, markAllRead } = useNotifications(token);
+  const push = usePush(token);
 
   const rtf = new Intl.RelativeTimeFormat(INTL_LOCALE[f.locale], { numeric: 'auto' });
   const when = (iso: string) => {
@@ -85,6 +88,14 @@ export function NotificationBell({ token }: { token: string }) {
       toast.error(t('panel.markAllFailed'));
     } finally {
       setMarkingAll(false);
+    }
+  };
+
+  const onEnablePush = async () => {
+    try {
+      await push.enable();
+    } catch {
+      toast.error(t('push.failed'));
     }
   };
 
@@ -202,6 +213,30 @@ export function NotificationBell({ token }: { token: string }) {
                   </ul>
                 )}
               </div>
+
+              {push.status === 'off' && (
+                <div className="flex items-center gap-3 border-t bg-muted/50 px-4 py-3">
+                  <BellRing className="size-5 shrink-0 text-primary" aria-hidden="true" />
+                  <p className="min-w-0 flex-1 text-sm leading-relaxed">{t('push.prompt')}</p>
+                  <Button size="sm" className="min-h-11 shrink-0" onClick={() => void onEnablePush()} disabled={push.busy}>
+                    {t('push.enable')}
+                  </Button>
+                </div>
+              )}
+              {push.status === 'denied' && (
+                <p className="flex items-center gap-3 border-t bg-muted/50 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+                  <BellOff className="size-5 shrink-0" aria-hidden="true" />
+                  {t('push.blocked')}
+                </p>
+              )}
+              {push.status === 'on' && (
+                <div className="flex items-center justify-between gap-3 border-t px-4 py-1 text-sm text-muted-foreground">
+                  <span>{t('push.on')}</span>
+                  <Button variant="ghost" size="sm" className="min-h-11" onClick={() => void push.disable()} disabled={push.busy}>
+                    {t('push.disable')}
+                  </Button>
+                </div>
+              )}
             </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>
