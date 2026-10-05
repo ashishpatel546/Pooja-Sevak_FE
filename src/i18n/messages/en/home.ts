@@ -38,6 +38,17 @@ const home = {
   'occasion.pitru.puja': 'Pitru Paksha Shraddh',
   'occasion.pitru.note': 'Tarpan and offerings so they are honoured and at peace.',
 
+  'festivals.titleMonth': 'Festivals in {month}',
+  'festivals.titleNext': 'Festivals coming up',
+  'festivals.lead': 'Panchang for {place}. Hover over or tap a date to see its tithi and festivals.',
+  'festivals.explore': 'Explore all festivals',
+  'festivals.calendarLabel': 'Calendar for {month}',
+  'festivals.thisMonth': 'Festivals this month',
+  'festivals.comingUp': 'Coming up next',
+  'festivals.quietDay': 'No festival or vrat on this day.',
+  'festivals.festivalDay': 'Festival',
+  'festivals.vratDay': 'Vrat or sacred day',
+
   'sacred.title': 'Pujas for the sacred days ahead',
   'sacred.lead':
     'Each sacred day has pujas families traditionally keep. Dates follow the panchang for {place}, so you can book Pandit-ji in good time.',

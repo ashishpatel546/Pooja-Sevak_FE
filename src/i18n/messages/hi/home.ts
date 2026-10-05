@@ -40,6 +40,17 @@ const home: Record<keyof typeof en, string> = {
   'occasion.pitru.puja': 'पितृ पक्ष श्राद्ध',
   'occasion.pitru.note': 'तर्पण और अर्पण, ताकि उन्हें सम्मान और शांति मिले।',
 
+  'festivals.titleMonth': '{month} के त्योहार',
+  'festivals.titleNext': 'आने वाले त्योहार',
+  'festivals.lead': '{place} का पंचांग। किसी तारीख़ पर कर्सर ले जाएँ या टैप करें — उस दिन की तिथि और त्योहार दिखेंगे।',
+  'festivals.explore': 'सभी त्योहार देखें',
+  'festivals.calendarLabel': '{month} का कैलेंडर',
+  'festivals.thisMonth': 'इस महीने के त्योहार',
+  'festivals.comingUp': 'आगे आने वाले',
+  'festivals.quietDay': 'इस दिन कोई त्योहार या व्रत नहीं है।',
+  'festivals.festivalDay': 'त्योहार',
+  'festivals.vratDay': 'व्रत या पावन दिन',
+
   'sacred.title': 'आने वाले पावन दिनों की पूजाएँ',
   'sacred.lead':
     'हर पावन दिन से कुछ पूजाएँ परंपरा से जुड़ी हैं। तिथियाँ {place} के पंचांग से हैं, ताकि आप समय रहते पंडित जी बुक कर सकें।',

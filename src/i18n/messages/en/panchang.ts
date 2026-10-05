@@ -44,6 +44,7 @@ const panchang = {
   'tithi.15': 'Purnima',
   'tithi.30': 'Amavasya',
 
+  'type.festival': 'Festivals',
   'type.purnima': 'Purnima',
   'type.amavasya': 'Amavasya',
   'type.ekadashi': 'Ekadashi',
@@ -78,6 +79,18 @@ const panchang = {
     'If you do not know the tithi, Sarva Pitru Amavasya — the last day of the fortnight — is kept for all ancestors.',
   'pitru.bookShraddh': 'Book Pitru Paksha Shraddh',
   'pitru.remember': 'Remember a loved one',
+
+  'view.label': 'What to show',
+  'view.all': 'All sacred days',
+  'view.festivals': 'Festivals',
+
+  'festivals.title': 'Festivals in the year ahead',
+  'festivals.intro':
+    'Diwali, Holi, Navratri, Janmashtami and the other great festivals of the next twelve months, dated by the panchang for {place}.',
+  'festivals.next': 'Next festival',
+  'festivals.empty': 'No festivals were found in the next twelve months.',
+  'festivals.unavailable': 'The festival calendar could not be loaded just now. Please open the page again in a little while.',
+  'festivals.remindAria': 'Remind me before {name} and the other festivals',
 
   'upcoming.title': 'Sacred days ahead',
   'upcoming.intro':

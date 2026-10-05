@@ -15,6 +15,8 @@ import { ObservanceIcon } from './observance-icon';
 import {
   groupByMonth,
   OBSERVANCE_KEYS,
+  observanceId,
+  occasionOf,
   pujaName,
   remindHref,
   signedInHref,
@@ -24,7 +26,7 @@ import { useDays } from './use-days';
 import { usePanchangText } from './use-panchang-text';
 
 /** "Fri 16 Oct", "in 3 days" or "Under way · ends 10 Oct" for an observance. */
-function useWhen(tz?: string) {
+export function useWhen(tz?: string) {
   const f = useFormat();
   const { t } = usePanchangText();
   const days = useDays(tz);
@@ -82,7 +84,7 @@ export function ObservanceRow({
 
       <div className="min-w-0">
         <div className="flex items-start gap-3">
-          <ObservanceIcon observanceKey={o.key} tithi={o.tithi} size="sm" />
+          <ObservanceIcon observanceKey={o.key} festival={o.festival} tithi={o.tithi} size="sm" />
           <div className="min-w-0">
             <Heading className="font-sans text-lg leading-snug font-semibold text-foreground">{name}</Heading>
             <p className="text-sm text-muted-foreground">
@@ -110,7 +112,7 @@ export function ObservanceRow({
               <span key={slug}>
                 {i > 0 && <span className="text-muted-foreground">, </span>}
                 <Link
-                  href={pujaHrefFor(slug, observanceBookingDay(o, dateKeyIn(tz ?? IST_ZONE)), o.key)}
+                  href={pujaHrefFor(slug, observanceBookingDay(o, dateKeyIn(tz ?? IST_ZONE)), occasionOf(o))}
                   className="rounded font-medium text-primary underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
                   {pujaName(slug, pujaNames, locale)}
@@ -154,7 +156,11 @@ export function SacredDays({
   const { t, typeName } = usePanchangText();
   const [filter, setFilter] = useState<ObservanceKey | 'all'>('all');
 
-  const present = useMemo(() => OBSERVANCE_KEYS.filter((k) => items.some((o) => o.key === k)), [items]);
+  // Festivals have their own tab on /panchang, so no chip here.
+  const present = useMemo(
+    () => OBSERVANCE_KEYS.filter((k) => k !== 'festival' && items.some((o) => o.key === k)),
+    [items],
+  );
   const shown = filter === 'all' ? items : items.filter((o) => o.key === filter);
   const groups = groupByMonth(shown);
 
@@ -198,7 +204,7 @@ export function SacredDays({
               </h3>
               <ul className="divide-y">
                 {g.items.map((o) => (
-                  <li key={`${o.key}-${o.date}`}>
+                  <li key={observanceId(o)}>
                     <ObservanceRow o={o} pujaNames={pujaNames} headingLevel="h4" tz={tz} />
                   </li>
                 ))}

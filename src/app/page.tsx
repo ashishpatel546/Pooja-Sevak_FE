@@ -42,6 +42,7 @@ import { PlaceSync } from '@/components/ritual/place-control';
 import { PitruPakshaBand } from '@/components/ritual/pitru-paksha-band';
 import { PujaIcon } from '@/components/common/puja-icon';
 import { MoonRing } from '@/components/home/moon-ring';
+import { FestivalMonth } from '@/components/home/festival-month';
 import { PanchangGlance } from '@/components/home/panchang-glance';
 import { SacredPlans, type PujaPrices } from '@/components/home/sacred-plans';
 import { JsonLd } from '@/components/seo/json-ld';
@@ -117,7 +118,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const [t, tp, tn, ts, tc, tcm, locale, { requested, place, today, day, upcoming }, catalog, info] = await Promise.all([
+  const [t, tp, tn, ts, tc, tcm, locale, { requested, place, today, day, upcoming, festivals, month }, catalog, info] = await Promise.all([
     getT('home'),
     getT('panchang'),
     getT('nav'),
@@ -125,7 +126,7 @@ export default async function Home() {
     getT('catalog'),
     getT('common'),
     getLocale(),
-    loadPanchang(45),
+    loadPanchang(45, { festivalDays: 120, month: true }),
     fetchCatalog(),
     getSiteInfo(),
   ]);
@@ -265,6 +266,11 @@ export default async function Home() {
         <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
           <PitruPakshaBand observance={pitru} variant="compact" tz={place.tz} />
         </div>
+      )}
+
+      {/* Festivals this month, with a calendar of the month's panchang — hidden when the panchang is unavailable */}
+      {(month || !!festivals?.length) && (
+        <FestivalMonth month={month} festivals={festivals ?? []} today={today} place={place} placeLabel={placeLabel} />
       )}
 
       {/* Occasions */}

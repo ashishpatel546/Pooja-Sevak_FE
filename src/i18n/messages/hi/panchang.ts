@@ -46,6 +46,7 @@ const panchang: Record<keyof typeof en, string> = {
   'tithi.15': 'पूर्णिमा',
   'tithi.30': 'अमावस्या',
 
+  'type.festival': 'त्योहार',
   'type.purnima': 'पूर्णिमा',
   'type.amavasya': 'अमावस्या',
   'type.ekadashi': 'एकादशी',
@@ -80,6 +81,18 @@ const panchang: Record<keyof typeof en, string> = {
     'अगर तिथि मालूम न हो, तो पखवाड़े का अंतिम दिन — सर्व पितृ अमावस्या — सभी पूर्वजों के लिए होता है।',
   'pitru.bookShraddh': 'पितृ पक्ष श्राद्ध बुक करें',
   'pitru.remember': 'किसी अपने को याद रखें',
+
+  'view.label': 'क्या दिखाएँ',
+  'view.all': 'सभी पावन दिन',
+  'view.festivals': 'त्योहार',
+
+  'festivals.title': 'आने वाले वर्ष के त्योहार',
+  'festivals.intro':
+    'दीपावली, होली, नवरात्रि, जन्माष्टमी और अगले बारह महीनों के अन्य बड़े पर्व — {place} के पंचांग के अनुसार तिथियों के साथ।',
+  'festivals.next': 'अगला त्योहार',
+  'festivals.empty': 'अगले बारह महीनों में कोई त्योहार नहीं मिला।',
+  'festivals.unavailable': 'त्योहारों की सूची अभी नहीं खुल सकी। थोड़ी देर बाद पेज फिर से खोलें।',
+  'festivals.remindAria': '{name} और अन्य त्योहारों से पहले मुझे याद दिलाएँ',
 
   'upcoming.title': 'आने वाले पावन दिन',
   'upcoming.intro':

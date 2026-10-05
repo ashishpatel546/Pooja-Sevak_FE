@@ -9,7 +9,7 @@ import type { PanchangDay } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Mandala } from '@/components/brand/mandala';
 import { MoonPhase } from './moon-phase';
-import { pakshaOf, tithiInPaksha } from './observance';
+import { observanceId, pakshaOf, tithiInPaksha } from './observance';
 import { PlaceControl } from './place-control';
 import { usePlaceName } from './use-place';
 import { usePanchangText } from './use-panchang-text';
@@ -105,7 +105,7 @@ export function PanchangToday({
                 <ul className="mt-8 flex flex-wrap gap-2" aria-label={t('hero.todayIs')}>
                   {day.observances.map((o) => (
                     <li
-                      key={`${o.key}-${o.date}`}
+                      key={observanceId(o)}
                       className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/8 px-3 text-sm text-[#fbe3b6] ring-1 ring-[#fbe3b6]/25"
                     >
                       <Sparkles className="size-3.5 text-diya" aria-hidden="true" />
