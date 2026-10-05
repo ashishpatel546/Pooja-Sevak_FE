@@ -255,7 +255,7 @@ const customer = {
   'browse.whereHint': 'We show only pandits who travel to your area, sorted by distance.',
   'browse.noneFor': 'No pandits offer {puja} here yet',
   'browse.none': 'No pandits cover this area yet',
-  'browse.tryCity': 'Try {city}',
+  'browse.changeArea': 'Search another area',
   'browse.showAll': 'Show all pujas',
   'browse.bookOnline': 'Book online instead',
   'browse.emptyHint': 'No pandit covers this location yet. Try a nearby location, or book online from anywhere.',

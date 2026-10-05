@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { MapPinOff, RefreshCw, Video } from 'lucide-react';
-import { QUICK_CITIES, saveLocation, useSavedLocation } from '@/lib/location';
+import { MapPin, MapPinOff, RefreshCw, Video } from 'lucide-react';
+import { saveLocation, useSavedLocation } from '@/lib/location';
 import type { Address, PanditListItem, ServiceDefinition } from '@/lib/types';
 import { applyBookingDate, NO_BOOKING_DATE, readBookingDate, withBookingDate } from '@/lib/booking-date';
 import { BookingDateBanner } from '@/components/customer/booking-date-banner';
@@ -48,6 +48,8 @@ function Browse() {
   const tc = useT('common');
   const { locale } = useLocale();
   const locationLabel = useLocationLabel();
+  // The "Change" dialog, also opened from the empty state's "search another area".
+  const [chooserOpen, setChooserOpen] = useState(false);
 
   // A returning devotee with a default address sees nearby pandits straight away.
   useEffect(() => {
@@ -87,7 +89,6 @@ function Browse() {
 
   const selected = services.data?.find((s) => s.id === serviceId);
   const selectedName = selected ? pick(selected, 'name', locale) : null;
-  const lucknow = QUICK_CITIES[0];
   const onlineHref = withBookingDate(`/online${serviceId ? `?service=${serviceId}` : ''}`, bookingDate);
 
   return (
@@ -111,7 +112,7 @@ function Browse() {
       ) : (
         <>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <LocationBar location={location} />
+            <LocationBar location={location} open={chooserOpen} onOpenChange={setChooserOpen} />
             <div className="grid gap-2">
               <Label htmlFor="browse-service">{t('service.label')}</Label>
               {services.loading ? (
@@ -144,13 +145,10 @@ function Browse() {
                 title={selectedName ? t('browse.noneFor', { puja: selectedName }) : t('browse.none')}
                 action={
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    {location.label !== lucknow.name && (
-                      <Button
-                        onClick={() => saveLocation({ label: lucknow.name, lat: lucknow.lat, lng: lucknow.lng })}
-                      >
-                        {t('browse.tryCity', { city: pick(lucknow, 'name', locale) })}
-                      </Button>
-                    )}
+                    <Button onClick={() => setChooserOpen(true)}>
+                      <MapPin aria-hidden="true" />
+                      {t('browse.changeArea')}
+                    </Button>
                     {selected && (
                       <Button variant="outline" onClick={() => setService(null)}>
                         {t('browse.showAll')}

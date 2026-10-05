@@ -177,15 +177,25 @@ export function LocationBar({
   location,
   prefix,
   className,
+  open: openProp,
+  onOpenChange,
 }: {
   location: SavedLocation;
   /** Legacy override shown before the place name; by default a translated sentence is used. */
   prefix?: string;
   className?: string;
+  /** Control the chooser dialog from outside (e.g. an empty state's "search another area"). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const t = useT('customer');
   const labelFor = useLocationLabel();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    onOpenChange?.(next);
+  };
   const place = <span className="font-medium text-foreground">{labelFor(location)}</span>;
   return (
     <div

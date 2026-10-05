@@ -243,7 +243,7 @@ const customer: Record<keyof typeof en, string> = {
   'browse.whereHint': 'हम केवल वही पंडित जी दिखाते हैं जो आपके क्षेत्र तक आते हैं, दूरी के क्रम में।',
   'browse.noneFor': 'यहाँ अभी कोई पंडित जी {puja} नहीं कराते',
   'browse.none': 'इस क्षेत्र में अभी कोई पंडित जी नहीं आते',
-  'browse.tryCity': '{city} में देखें',
+  'browse.changeArea': 'दूसरा क्षेत्र खोजें',
   'browse.showAll': 'सभी पूजाएँ देखें',
   'browse.bookOnline': 'ऑनलाइन बुक करें',
   'browse.emptyHint': 'इस स्थान पर अभी कोई पंडित जी सेवा नहीं देते। पास का कोई स्थान चुनें, या कहीं से भी ऑनलाइन बुक करें।',
