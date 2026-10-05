@@ -40,8 +40,14 @@ const home = {
 
   'festivals.titleMonth': 'Festivals in {month}',
   'festivals.titleNext': 'Festivals coming up',
-  'festivals.lead': 'Dated by the panchang for {place}. Book a pandit early — festival days fill fast.',
+  'festivals.lead': 'Panchang for {place}. Hover over or tap a date to see its tithi and festivals.',
   'festivals.explore': 'Explore all festivals',
+  'festivals.calendarLabel': 'Calendar for {month}',
+  'festivals.thisMonth': 'Festivals this month',
+  'festivals.comingUp': 'Coming up next',
+  'festivals.quietDay': 'No festival or vrat on this day.',
+  'festivals.festivalDay': 'Festival',
+  'festivals.vratDay': 'Vrat or sacred day',
 
   'sacred.title': 'Pujas for the sacred days ahead',
   'sacred.lead':

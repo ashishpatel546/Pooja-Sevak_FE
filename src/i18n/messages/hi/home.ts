@@ -42,8 +42,14 @@ const home: Record<keyof typeof en, string> = {
 
   'festivals.titleMonth': '{month} के त्योहार',
   'festivals.titleNext': 'आने वाले त्योहार',
-  'festivals.lead': '{place} के पंचांग के अनुसार तिथियाँ। पंडित जी पहले से बुक करें — त्योहारों पर दिन जल्दी भर जाते हैं।',
+  'festivals.lead': '{place} का पंचांग। किसी तारीख़ पर कर्सर ले जाएँ या टैप करें — उस दिन की तिथि और त्योहार दिखेंगे।',
   'festivals.explore': 'सभी त्योहार देखें',
+  'festivals.calendarLabel': '{month} का कैलेंडर',
+  'festivals.thisMonth': 'इस महीने के त्योहार',
+  'festivals.comingUp': 'आगे आने वाले',
+  'festivals.quietDay': 'इस दिन कोई त्योहार या व्रत नहीं है।',
+  'festivals.festivalDay': 'त्योहार',
+  'festivals.vratDay': 'व्रत या पावन दिन',
 
   'sacred.title': 'आने वाले पावन दिनों की पूजाएँ',
   'sacred.lead':

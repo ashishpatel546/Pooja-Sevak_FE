@@ -761,6 +761,17 @@ export type PanchangDay = {
   observances: Observance[];
 };
 
+/** One day of a month grid: the day panchang with observance names only. */
+export type PanchangMonthDay = Omit<PanchangDay, 'location' | 'observances'> & {
+  observances: Pick<Observance, 'key' | 'festival' | 'date' | 'end_date' | 'name_en' | 'name_hi'>[];
+};
+
+export type PanchangMonth = {
+  location: PanchangPlace;
+  month: string; // YYYY-MM
+  days: PanchangMonthDay[];
+};
+
 // Reminders
 export type RemembranceKind = 'punyatithi' | 'birthday' | 'anniversary' | 'custom';
 export type ObserveBy = 'tithi' | 'date';

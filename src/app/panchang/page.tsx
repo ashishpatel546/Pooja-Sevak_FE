@@ -26,7 +26,7 @@ const FESTIVAL_DAYS = 366;
 
 export default async function PanchangPage({ searchParams }: Props) {
   const [{ requested, place, today, day, upcoming, festivals }, catalog, t, locale, query] = await Promise.all([
-    loadPanchang(90, FESTIVAL_DAYS),
+    loadPanchang(90, { festivalDays: FESTIVAL_DAYS }),
     fetchCatalog(),
     getT('panchang'),
     getLocale(),

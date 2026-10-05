@@ -56,12 +56,12 @@ export function ObservanceIcon({
   observanceKey: ObservanceKey | null;
   festival?: FestivalId | null;
   tithi?: number | null;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   tone?: 'gold' | 'ink';
   className?: string;
 }) {
-  const well = { sm: 'size-9', md: 'size-11', lg: 'size-14' }[size];
-  const glyph = { sm: 'size-6', md: 'size-7', lg: 'size-9' }[size];
+  const well = { xs: 'size-6', sm: 'size-9', md: 'size-11', lg: 'size-14' }[size];
+  const glyph = { xs: 'size-4', sm: 'size-6', md: 'size-7', lg: 'size-9' }[size];
   const surface =
     tone === 'gold' ? 'bg-white/5 ring-1 ring-[#fbe3b6]/20' : 'bg-chandan ring-1 ring-diya/30';
 

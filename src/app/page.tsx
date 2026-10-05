@@ -110,20 +110,6 @@ function sacredPlans(upcoming: Observance[] | null, today: string, skipPitru: bo
   return out;
 }
 
-/**
- * Festivals for the home page: those of the current month (ongoing ones too),
- * or the next three when this month has none left.
- */
-function festivalsToShow(
-  festivals: Observance[] | null,
-  today: string,
-): { mode: 'month' | 'next'; items: Observance[] } | null {
-  if (!festivals?.length) return null;
-  const month = today.slice(0, 7);
-  const inMonth = festivals.filter((o) => o.date.startsWith(month) || isOnDay(o, today));
-  return inMonth.length ? { mode: 'month', items: inMonth.slice(0, 6) } : { mode: 'next', items: festivals.slice(0, 3) };
-}
-
 const STEP_NUMERALS = ['१', '२', '३', '४'];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -132,7 +118,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const [t, tp, tn, ts, tc, tcm, locale, { requested, place, today, day, upcoming, festivals }, catalog, info] = await Promise.all([
+  const [t, tp, tn, ts, tc, tcm, locale, { requested, place, today, day, upcoming, festivals, month }, catalog, info] = await Promise.all([
     getT('home'),
     getT('panchang'),
     getT('nav'),
@@ -140,7 +126,7 @@ export default async function Home() {
     getT('catalog'),
     getT('common'),
     getLocale(),
-    loadPanchang(45, 120),
+    loadPanchang(45, { festivalDays: 120, month: true }),
     fetchCatalog(),
     getSiteInfo(),
   ]);
@@ -170,7 +156,6 @@ export default async function Home() {
 
   const pitru = activePitruPaksha(today, day?.observances, upcoming);
   const plans = sacredPlans(upcoming, today, !!pitru);
-  const festivalView = festivalsToShow(festivals, today);
   const pujaNames = pujaNamesFrom(catalog);
   const prices: PujaPrices = Object.fromEntries((catalog ?? []).map((d) => [d.slug, priceOf(d.slug)]));
   const grid = gridPujas(catalog, new Set(OCCASIONS.map((o) => o.slug)));
@@ -283,16 +268,9 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Festivals this month — hidden when the panchang is unavailable */}
-      {festivalView && (
-        <FestivalMonth
-          items={festivalView.items}
-          mode={festivalView.mode}
-          month={today.slice(0, 7)}
-          place={placeLabel}
-          pujaNames={pujaNames}
-          tz={place.tz}
-        />
+      {/* Festivals this month, with a calendar of the month's panchang — hidden when the panchang is unavailable */}
+      {(month || !!festivals?.length) && (
+        <FestivalMonth month={month} festivals={festivals ?? []} today={today} place={place} placeLabel={placeLabel} />
       )}
 
       {/* Occasions */}
