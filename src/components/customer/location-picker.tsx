@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Crosshair, Home, Loader2, MapPin } from 'lucide-react';
+import { useId, useState } from 'react';
+import { Crosshair, Home, Loader2, MapPin, Search } from 'lucide-react';
+import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import {
   findQuickCity,
@@ -22,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorMessage, useApiQuery } from './use-api';
 
@@ -42,7 +44,87 @@ export function useLocationLabel() {
   };
 }
 
-/** The three ways to choose a location. Saves the choice, then calls `onChosen`. */
+type PlaceResult = { label: string; detail: string | null; lat: number; lng: number };
+
+/**
+ * Typed area search (OpenStreetMap via our API). Searches on submit only:
+ * the provider's usage policy forbids search-as-you-type.
+ */
+function AreaSearch({ onPick }: { onPick: (loc: SavedLocation) => void }) {
+  const t = useT('customer');
+  const { locale } = useLocale();
+  const inputId = useId();
+  const [q, setQ] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [results, setResults] = useState<PlaceResult[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const search = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = q.trim();
+    if (text.length < 2 || busy) return;
+    setBusy(true);
+    setError(null);
+    setResults(null);
+    try {
+      const list = await api<PlaceResult[]>('/places/search', { query: { q: text, lang: locale } });
+      setResults(list);
+      if (list.length === 0) setError(t('location.searchNone'));
+    } catch {
+      setError(t('location.searchError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section aria-labelledby={`${inputId}-h`}>
+      <h3 id={`${inputId}-h`} className="mb-2 font-sans text-sm font-medium text-foreground">
+        <label htmlFor={inputId}>{t('location.search')}</label>
+      </h3>
+      <form onSubmit={search} className="flex gap-2" role="search">
+        <Input
+          id={inputId}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t('location.searchPlaceholder')}
+          autoComplete="off"
+          enterKeyHint="search"
+          maxLength={100}
+          className="h-11 min-w-0 flex-1"
+        />
+        <Button type="submit" size="lg" variant="outline" disabled={busy || q.trim().length < 2}>
+          {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Search aria-hidden="true" />}
+          <span className="sr-only sm:not-sr-only">{busy ? t('location.searching') : t('location.searchButton')}</span>
+        </Button>
+      </form>
+      <p role="status" aria-live="polite" className={cn('text-sm', error ? 'mt-2 text-muted-foreground' : 'sr-only')}>
+        {error ?? ''}
+      </p>
+      {results && results.length > 0 && (
+        <ul className="mt-2 grid gap-2">
+          {results.map((r) => (
+            <li key={`${r.lat},${r.lng}`}>
+              <button
+                type="button"
+                onClick={() => onPick({ label: r.label, lat: r.lat, lng: r.lng })}
+                className="flex min-h-14 w-full items-start gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="block font-medium">{r.label}</span>
+                  {r.detail && <span className="block truncate text-sm text-muted-foreground">{r.detail}</span>}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** The ways to choose a location. Saves the choice, then calls `onChosen`. */
 export function LocationChooser({
   current,
   onChosen,
@@ -86,6 +168,8 @@ export function LocationChooser({
           {geoError ?? ''}
         </p>
       </div>
+
+      <AreaSearch onPick={choose} />
 
       {token && (
         <section aria-labelledby="saved-addr-h">
@@ -177,15 +261,25 @@ export function LocationBar({
   location,
   prefix,
   className,
+  open: openProp,
+  onOpenChange,
 }: {
   location: SavedLocation;
   /** Legacy override shown before the place name; by default a translated sentence is used. */
   prefix?: string;
   className?: string;
+  /** Control the chooser dialog from outside (e.g. an empty state's "search another area"). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const t = useT('customer');
   const labelFor = useLocationLabel();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    onOpenChange?.(next);
+  };
   const place = <span className="font-medium text-foreground">{labelFor(location)}</span>;
   return (
     <div
