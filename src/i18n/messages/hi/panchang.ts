@@ -107,7 +107,7 @@ const panchang: Record<keyof typeof en, string> = {
 
   'place.showing': '{place} का पंचांग दिखाया जा रहा है',
   'place.approx': 'यह आपके टाइम ज़ोन से अनुमान है — सही सूर्योदय के लिए अपना शहर चुनें।',
-  'place.yourLocation': 'आपका स्थान',
+  'place.yourLocation': 'आपके स्थान',
   'place.useExact': 'मेरा सटीक स्थान लें',
   'place.finding': 'आपका स्थान खोजा जा रहा है…',
   'place.updating': '{place} का पंचांग लाया जा रहा है…',

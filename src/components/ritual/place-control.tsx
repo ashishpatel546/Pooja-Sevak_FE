@@ -23,7 +23,9 @@ import {
   placeFromDevice,
   readPlaceCookie,
   resolveBasePlace,
-  silentDevicePlace,
+  devicePlace,
+  markPlaceSettled,
+  nameDevicePlace,
   usePlaceName,
   writePlaceCookie,
 } from './use-place';
@@ -35,7 +37,8 @@ const refreshedFor = new Set<string>();
 const placeKey = (p: Pick<Place, 'lat' | 'lng' | 'tz'>) => `${p.lat.toFixed(2)},${p.lng.toFixed(2)},${p.tz}`;
 
 /**
- * Works out the visitor's place in the browser, stores it in the `ps_place`
+ * Works out the visitor's place in the browser (the device location by
+ * default — the browser asks once), stores it in the `ps_place`
  * cookie, and — if the server rendered for a different place — refreshes the
  * server components once. Renders nothing.
  */
@@ -51,11 +54,12 @@ export function PlaceSync({ requested, refresh = true }: { requested: Place; ref
       const cookie = readPlaceCookie();
       let next = resolveBasePlace(cookie, readLocation(), browserTz);
       if (next.source !== 'manual') {
-        const device = await silentDevicePlace(browserTz);
-        if (device) next = device;
+        const device = await devicePlace(browserTz);
+        if (device) next = await nameDevicePlace(device, cookie);
       }
       if (cancelled) return;
       if (!sameStoredPlace(cookie, next)) writePlaceCookie(next);
+      markPlaceSettled();
       const key = placeKey(next);
       if (refresh && !samePlace(next, { lat, lng, tz }) && !refreshedFor.has(key)) {
         refreshedFor.add(key);
@@ -130,7 +134,7 @@ export function PlaceControl({
     setLocating(true);
     try {
       const c = await getCurrentPosition();
-      await apply(placeFromDevice(c, browserTimeZone()));
+      await apply(await nameDevicePlace(placeFromDevice(c, browserTimeZone()), readPlaceCookie()));
     } catch (e) {
       setError(geoErrorText(e));
     } finally {

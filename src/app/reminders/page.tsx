@@ -39,7 +39,7 @@ import { ReminderPreferencesForm } from '@/components/ritual/reminder-preference
 import { UpcomingTimeline } from '@/components/ritual/upcoming-timeline';
 import { useErrorText } from '@/components/ritual/use-error-text';
 import { PlaceSync } from '@/components/ritual/place-control';
-import { usePlace, usePlaceName } from '@/components/ritual/use-place';
+import { usePlace, usePlaceName, usePlaceSettled } from '@/components/ritual/use-place';
 
 const TABS = ['upcoming', 'loved-ones', 'preferences'] as const;
 type Tab = (typeof TABS)[number];
@@ -100,8 +100,10 @@ function Smaran() {
 
   // Reminder location: the server uses Lucknow/IST until one is saved. The
   // first time we see none, save the visitor's own place so the 6 AM reminder
-  // and the dates below follow their clock.
+  // and the dates below follow their clock — once <PlaceSync> has had its
+  // chance at the device location, so we don't store a guess.
   const place = usePlace();
+  const placeSettled = usePlaceSettled();
   const placeLabel = usePlaceName();
   const autoPlaceStarted = useRef(false);
   const [autoPlaceTried, setAutoPlaceTried] = useState(false);
@@ -109,7 +111,7 @@ function Smaran() {
   const { setData: setPrefsData } = prefs;
   const { reload: reloadUpcoming } = upcoming;
   useEffect(() => {
-    if (!prefsData || prefsData.location !== null || autoPlaceStarted.current || !token) return;
+    if (!prefsData || prefsData.location !== null || autoPlaceStarted.current || !token || !placeSettled) return;
     autoPlaceStarted.current = true;
     api<ReminderPreferences>('/reminders/preferences', {
       method: 'PUT',
@@ -124,7 +126,7 @@ function Smaran() {
         /* keep Lucknow; the visitor can still choose a place in Preferences */
       })
       .finally(() => setAutoPlaceTried(true));
-  }, [prefsData, place, token, setPrefsData, reloadUpcoming]);
+  }, [prefsData, place, placeSettled, token, setPrefsData, reloadUpcoming]);
   const awaitingPlace = prefsData?.location === null && !autoPlaceTried;
   const reminderPlace = (prefsData?.location && fromPanchangPlace(prefsData.location)) || DEFAULT_PLACE;
   const reminderTz = prefsData?.location?.tz ?? IST_ZONE;
