@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, MapPinOff, RefreshCw, Video } from 'lucide-react';
-import { saveLocation, useSavedLocation } from '@/lib/location';
+import { readLocation, saveLocation, useSavedLocation } from '@/lib/location';
 import type { Address, PanditListItem, ServiceDefinition } from '@/lib/types';
 import { applyBookingDate, NO_BOOKING_DATE, readBookingDate, withBookingDate } from '@/lib/booking-date';
 import { BookingDateBanner } from '@/components/customer/booking-date-banner';
@@ -20,6 +20,13 @@ import { LocationBar, LocationChooser, useLocationLabel } from '@/components/cus
 import { PanditCard, PanditCardSkeleton } from '@/components/customer/pandit-card';
 import { ServiceSelect } from '@/components/customer/service-select';
 import { useApiQuery, useHydrated } from '@/components/customer/use-api';
+import {
+  browserTimeZone,
+  devicePlace,
+  nameDevicePlace,
+  readPlaceCookie,
+  savedFromDevice,
+} from '@/components/ritual/use-place';
 
 function ResultsSkeleton() {
   return (
@@ -43,7 +50,7 @@ function Browse() {
   })();
   const hydrated = useHydrated();
   const location = useSavedLocation();
-  const { user, token } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
   const t = useT('customer');
   const tc = useT('common');
   const { locale } = useLocale();
@@ -51,26 +58,39 @@ function Browse() {
   // The "Change" dialog, also opened from the empty state's "search another area".
   const [chooserOpen, setChooserOpen] = useState(false);
 
-  // A returning devotee with a default address sees nearby pandits straight away.
+  // Nothing chosen yet: a returning devotee's default address, else the
+  // device location (the browser asks once), so nearby pandits show straight away.
   useEffect(() => {
-    if (!hydrated || location || !token || user?.role !== 'customer') return;
+    if (!hydrated || location || authLoading) return;
     let cancelled = false;
-    api<Address[]>('/addresses', { token })
-      .then((list) => {
-        const a = list.find((x) => x.is_default) ?? list[0];
-        if (cancelled || !a) return;
-        saveLocation({
-          label: `${a.label} · ${a.city}`,
-          lat: a.location_coordinates.lat,
-          lng: a.location_coordinates.lng,
-          address_id: a.id,
-        });
-      })
-      .catch(() => {});
+    const fromDevice = async () => {
+      const d = await devicePlace(browserTimeZone());
+      if (cancelled || !d) return;
+      const named = await nameDevicePlace(d, readPlaceCookie());
+      if (cancelled || readLocation()) return;
+      saveLocation(savedFromDevice(named));
+    };
+    if (!token || user?.role !== 'customer') {
+      void fromDevice();
+    } else {
+      api<Address[]>('/addresses', { token })
+        .then((list) => {
+          const a = list.find((x) => x.is_default) ?? list[0];
+          if (cancelled) return;
+          if (!a) return fromDevice();
+          saveLocation({
+            label: `${a.label} · ${a.city}`,
+            lat: a.location_coordinates.lat,
+            lng: a.location_coordinates.lng,
+            address_id: a.id,
+          });
+        })
+        .catch(() => fromDevice());
+    }
     return () => {
       cancelled = true;
     };
-  }, [hydrated, location, token, user?.role]);
+  }, [hydrated, location, authLoading, token, user?.role]);
 
   const services = useApiQuery<ServiceDefinition[]>('/service-definitions');
   const pandits = useApiQuery<PanditListItem[]>(location ? '/pandits/browse' : null, {
@@ -116,13 +136,15 @@ function Browse() {
             <div className="grid gap-2">
               <Label htmlFor="browse-service">{t('service.label')}</Label>
               {services.loading ? (
-                <Skeleton className="h-11 w-full rounded-lg sm:w-72" />
+                <Skeleton className="h-11 w-full rounded-lg sm:w-72 lg:h-[66px] lg:rounded-2xl" />
               ) : (
                 <ServiceSelect
                   id="browse-service"
                   services={services.data ?? []}
                   value={serviceId}
                   onChange={setService}
+                  // Same height and shape as the location bar beside it (py-3 + h-10 button + border).
+                  className="text-base lg:rounded-2xl lg:px-4 lg:data-[size=default]:h-[66px]"
                 />
               )}
             </div>

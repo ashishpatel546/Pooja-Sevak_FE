@@ -2,9 +2,11 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 import { useLocale, useT } from '@/i18n';
+import { api } from '@/lib/api';
 import { findQuickCity, QUICK_CITIES, readLocation, type SavedLocation } from '@/lib/location';
 import {
   DEFAULT_PLACE,
+  INDIA_CITIES,
   IST_ZONE,
   nearestCity,
   parsePlaceCookie,
@@ -12,6 +14,8 @@ import {
   PLACE_MAX_AGE,
   placeFromTimezone,
   placeName,
+  placeQuery,
+  samePlace,
   serializePlace,
   ZONE_CITIES,
   zoneFor,
@@ -21,7 +25,7 @@ import {
 
 // Resolution order (first match wins):
 //   1. a place the visitor picked by hand (cookie, source 'manual')
-//   2. the device location (cookie 'gps', or silently when permission is already granted — see <PlaceSync>)
+//   2. the device location (cookie 'gps', or asked for once — see devicePlace() and <PlaceSync>)
 //   3. the location chosen for browsing pandits (lib/location.ts)
 //   4. a city guessed from the browser time zone (no prompt, nothing leaves the browser)
 //   5. Lucknow / IST
@@ -29,7 +33,7 @@ import {
 const EVENT = 'ps-place-change';
 const LOCATION_EVENT = 'puja-location-change';
 
-/** Indian quick cities (lib/location.ts) followed by the NRI table, for the picker and GPS labels. */
+/** Indian quick cities (lib/location.ts), larger Indian cities, then the NRI table — for the picker and GPS labels. */
 export const PICKER_CITIES: City[] = [
   ...QUICK_CITIES.map((c) => ({
     id: `in-${c.name}`,
@@ -40,6 +44,7 @@ export const PICKER_CITIES: City[] = [
     label_hi: c.name_hi,
     region: 'india' as const,
   })),
+  ...INDIA_CITIES,
   ...ZONE_CITIES,
 ];
 
@@ -78,10 +83,15 @@ export function placeFromSaved(loc: SavedLocation, browserTz: string | null): Pl
     lat: loc.lat,
     lng: loc.lng,
     tz: zoneFor(loc.lat, loc.lng, browserTz),
-    label: device ? (near?.label_en ?? null) : (quick?.name ?? cityText),
-    label_hi: device ? (near?.label_hi ?? null) : (quick?.name_hi ?? null),
+    label: device ? (deviceName(loc) ?? near?.label_en ?? null) : (quick?.name ?? cityText),
+    label_hi: device ? (deviceName(loc) ? (loc.label_hi ?? null) : (near?.label_hi ?? null)) : (quick?.name_hi ?? null),
     source: 'saved',
   };
+}
+
+/** The town name stored with a device location, if we looked one up. */
+function deviceName(loc: SavedLocation): string | null {
+  return loc.label && loc.label !== 'Your current location' ? loc.label : null;
 }
 
 /** A device fix as a place, named after a known city when one is close by. */
@@ -109,19 +119,59 @@ export function resolveBasePlace(
   return cookie ?? DEFAULT_PLACE;
 }
 
-/**
- * Device location without a prompt: only when the visitor has already granted
- * geolocation to this site. Coarse accuracy and a cached fix are plenty.
- */
-export async function silentDevicePlace(browserTz: string | null): Promise<Place | null> {
+const ASKED_KEY = 'ps_geo_asked';
+
+function askedBefore(): boolean {
   try {
-    if (!navigator.permissions?.query || !navigator.geolocation) return null;
-    const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-    if (status.state !== 'granted') return null;
+    return localStorage.getItem(ASKED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markAsked() {
+  try {
+    localStorage.setItem(ASKED_KEY, '1');
+  } catch {
+    /* storage unavailable — we may ask again next visit */
+  }
+}
+
+/**
+ * The device location as the default place. Used silently when the visitor has
+ * already allowed it; asked for once per browser when they haven't decided yet.
+ * A dismissed or denied prompt is not repeated — "Use my exact location" still
+ * asks. Coarse accuracy and a cached fix are plenty.
+ */
+export function devicePlace(browserTz: string | null): Promise<Place | null> {
+  // One lookup at a time: effects that re-run mid-prompt share it instead of
+  // finding the "asked" flag set and giving up.
+  inFlight ??= lookupDevice(browserTz).finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
+}
+
+let inFlight: Promise<Place | null> | null = null;
+
+async function lookupDevice(browserTz: string | null): Promise<Place | null> {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+  let state: PermissionState | null = null;
+  try {
+    state = (await navigator.permissions?.query({ name: 'geolocation' as PermissionName }))?.state ?? null;
+  } catch {
+    /* Permissions API missing (older Safari) — fall through to asking once */
+  }
+  if (state === 'denied') return null;
+  if (state !== 'granted') {
+    if (askedBefore()) return null;
+    markAsked();
+  }
+  try {
     const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         enableHighAccuracy: false,
-        timeout: 8000,
+        timeout: 15_000,
         maximumAge: 30 * 60_000,
       }),
     );
@@ -129,6 +179,64 @@ export async function silentDevicePlace(browserTz: string | null): Promise<Place
   } catch {
     return null;
   }
+}
+
+/** A named device place as the pandit-browsing location. */
+export function savedFromDevice(p: Place): SavedLocation {
+  return {
+    label: p.label ?? 'Your current location',
+    ...(p.label && p.label_hi ? { label_hi: p.label_hi } : {}),
+    kind: 'gps',
+    lat: p.lat,
+    lng: p.lng,
+  };
+}
+
+type ReverseName = { name: { label: string; label_hi: string | null } | null };
+
+/**
+ * Names a device place after its town (our API asks OpenStreetMap, with the
+ * coordinates rounded to ~1 km). Reuses `known` when it is the same spot, so a
+ * returning visitor costs no lookup; keeps the nearby-city name on failure.
+ */
+export async function nameDevicePlace(p: Place, known?: Place | null): Promise<Place> {
+  if (known?.label && samePlace(known, p)) return { ...p, label: known.label, label_hi: known.label_hi ?? null };
+  const { lat, lng } = placeQuery(p);
+  try {
+    const res = await Promise.race([
+      api<ReverseName>('/places/reverse', { query: { lat, lng } }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+    ]);
+    if (res?.name) return { ...p, label: res.name.label, label_hi: res.name.label_hi };
+  } catch {
+    /* keep the nearby-city name, or "your location" */
+  }
+  return p;
+}
+
+// Set once <PlaceSync> has finished looking for the device location on this
+// page, so callers that store the place (reminders) don't save a guess.
+let settled = false;
+const SETTLED_EVENT = 'ps-place-settled';
+
+export function markPlaceSettled() {
+  if (settled) return;
+  settled = true;
+  window.dispatchEvent(new Event(SETTLED_EVENT));
+}
+
+function subscribeSettled(cb: () => void) {
+  window.addEventListener(SETTLED_EVENT, cb);
+  return () => window.removeEventListener(SETTLED_EVENT, cb);
+}
+
+/** True once the visitor's place is as good as it will get on this page load. */
+export function usePlaceSettled(): boolean {
+  return useSyncExternalStore(
+    subscribeSettled,
+    () => settled,
+    () => false,
+  );
 }
 
 // --- reactive store -------------------------------------------------------

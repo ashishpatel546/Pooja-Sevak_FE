@@ -5,7 +5,10 @@ import type { Coordinates } from './types';
 
 /** The place a customer wants pujas for. Persisted per browser. */
 export type SavedLocation = {
+  /** For a device location: its town in English once looked up, else 'Your current location'. */
   label: string;
+  /** Hindi name of that town, when known. */
+  label_hi?: string;
   lat: number;
   lng: number;
   address_id?: string;
@@ -53,6 +56,7 @@ function parse(raw: string | null): SavedLocation | null {
       lng,
       ...(v.address_id ? { address_id: v.address_id } : {}),
       ...(v.kind === 'gps' ? { kind: 'gps' as const } : {}),
+      ...(typeof v.label_hi === 'string' && v.label_hi ? { label_hi: v.label_hi } : {}),
     };
   } catch {
     return null;

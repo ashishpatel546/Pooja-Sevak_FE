@@ -2,6 +2,7 @@
 
 import type { ServiceDefinition } from '@/lib/types';
 import { pick, useLocale, useT } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /** Puja filter. `value` null means all pujas. */
@@ -11,12 +12,15 @@ export function ServiceSelect({
   onChange,
   onlineOnly = false,
   id,
+  className,
 }: {
   services: ServiceDefinition[];
   value: string | null;
   onChange: (id: string | null) => void;
   onlineOnly?: boolean;
   id?: string;
+  /** Extra classes for the trigger, e.g. to match a neighbouring control's height. */
+  className?: string;
 }) {
   const t = useT('customer');
   const { locale } = useLocale();
@@ -30,7 +34,7 @@ export function ServiceSelect({
       value={current}
       onValueChange={(v) => onChange(!v || v === 'all' ? null : String(v))}
     >
-      <SelectTrigger id={id} className="w-full sm:w-72" aria-label={t('service.filter')}>
+      <SelectTrigger id={id} className={cn('w-full sm:w-72', className)} aria-label={t('service.filter')}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

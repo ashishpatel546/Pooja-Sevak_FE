@@ -5,7 +5,8 @@
 // Privacy: nothing here talks to a third party. The approximate place comes
 // from the browser's own time zone; the exact one only from the device, after
 // the visitor allows it. Coordinates are rounded to 2 decimals (~1 km) before
-// they are stored.
+// they are stored, and before our API is asked for the town's name
+// (nameDevicePlace in components/ritual/use-place.ts).
 
 import type { Locale } from '@/i18n/config';
 import type { PanchangPlace } from './types';
@@ -50,6 +51,64 @@ export const DEFAULT_PLACE: Place = {
   label_hi: 'भारत',
   source: 'default',
 };
+
+/** Larger Indian cities, to name a device location and for the city picker. */
+export const INDIA_CITIES: City[] = (
+  [
+    ['Delhi', 'दिल्ली', 28.61, 77.21],
+    ['Noida', 'नोएडा', 28.54, 77.39],
+    ['Gurugram', 'गुरुग्राम', 28.46, 77.03],
+    ['Mumbai', 'मुंबई', 19.08, 72.88],
+    ['Pune', 'पुणे', 18.52, 73.86],
+    ['Bengaluru', 'बेंगलुरु', 12.97, 77.59],
+    ['Hyderabad', 'हैदराबाद', 17.39, 78.49],
+    ['Chennai', 'चेन्नई', 13.08, 80.27],
+    ['Kolkata', 'कोलकाता', 22.57, 88.36],
+    ['Ahmedabad', 'अहमदाबाद', 23.02, 72.57],
+    ['Surat', 'सूरत', 21.17, 72.83],
+    ['Jaipur', 'जयपुर', 26.91, 75.79],
+    ['Chandigarh', 'चंडीगढ़', 30.73, 76.78],
+    ['Dehradun', 'देहरादून', 30.32, 78.03],
+    ['Haridwar', 'हरिद्वार', 29.95, 78.16],
+    ['Agra', 'आगरा', 27.18, 78.01],
+    ['Mathura', 'मथुरा', 27.49, 77.67],
+    ['Meerut', 'मेरठ', 28.98, 77.71],
+    ['Bareilly', 'बरेली', 28.37, 79.43],
+    ['Gorakhpur', 'गोरखपुर', 26.76, 83.37],
+    ['Patna', 'पटना', 25.59, 85.14],
+    ['Gaya', 'गया', 24.79, 85.0],
+    ['Ranchi', 'रांची', 23.34, 85.31],
+    ['Bhopal', 'भोपाल', 23.26, 77.41],
+    ['Indore', 'इंदौर', 22.72, 75.86],
+    ['Ujjain', 'उज्जैन', 23.18, 75.78],
+    ['Gwalior', 'ग्वालियर', 26.22, 78.18],
+    ['Jabalpur', 'जबलपुर', 23.18, 79.99],
+    ['Raipur', 'रायपुर', 21.25, 81.63],
+    ['Nagpur', 'नागपुर', 21.15, 79.09],
+    ['Nashik', 'नासिक', 20.0, 73.79],
+    ['Bhubaneswar', 'भुवनेश्वर', 20.3, 85.82],
+    ['Guwahati', 'गुवाहाटी', 26.14, 91.74],
+    ['Amritsar', 'अमृतसर', 31.63, 74.87],
+    ['Ludhiana', 'लुधियाना', 30.9, 75.86],
+    ['Jammu', 'जम्मू', 32.73, 74.86],
+    ['Udaipur', 'उदयपुर', 24.59, 73.71],
+    ['Jodhpur', 'जोधपुर', 26.24, 73.02],
+    ['Vadodara', 'वडोदरा', 22.31, 73.18],
+    ['Kochi', 'कोच्चि', 9.93, 76.27],
+    ['Thiruvananthapuram', 'तिरुवनंतपुरम', 8.52, 76.94],
+    ['Visakhapatnam', 'विशाखापत्तनम', 17.69, 83.22],
+    ['Madurai', 'मदुरै', 9.93, 78.12],
+    ['Coimbatore', 'कोयंबटूर', 11.02, 76.96],
+  ] as const
+).map(([label_en, label_hi, lat, lng]) => ({
+  id: `in-${label_en}`,
+  tz: IST_ZONE,
+  lat,
+  lng,
+  label_en,
+  label_hi,
+  region: 'india' as const,
+}));
 
 /** One representative city per time zone where Indian families live. */
 export const ZONE_CITIES: City[] = (
@@ -328,7 +387,7 @@ export function fromPanchangPlace(p: PanchangPlace, source: PlaceSource = 'manua
   const place = toPlace({ ...p, source });
   if (!place) return null;
   // Translate known city names for Hindi readers.
-  const city = [...ZONE_CITIES].find((c) => c.label_en === place.label);
+  const city = [...INDIA_CITIES, ...ZONE_CITIES].find((c) => c.label_en === place.label);
   if (city) place.label_hi = city.label_hi;
   else if (place.label === DEFAULT_PLACE.label) place.label_hi = DEFAULT_PLACE.label_hi;
   // Reminder places saved before the default was renamed.

@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorMessage, useApiQuery } from './use-api';
+import { browserTimeZone, nameDevicePlace, placeFromDevice, readPlaceCookie, savedFromDevice } from '@/components/ritual/use-place';
 
 /**
  * Display label for a saved location in the visitor's language: the device
@@ -35,7 +36,9 @@ export function useLocationLabel() {
   const t = useT('customer');
   const { locale } = useLocale();
   return (loc: SavedLocation): string => {
-    if (loc.kind === 'gps' || loc.label === 'Your current location') return t('location.current');
+    if (loc.label === 'Your current location') return t('location.current');
+    // A device location named after its town.
+    if (loc.kind === 'gps') return (locale === 'hi' && loc.label_hi) || loc.label;
     if (!loc.address_id) {
       const city = findQuickCity(loc.label);
       if (city) return pick(city, 'name', locale);
@@ -149,7 +152,8 @@ export function LocationChooser({
     setLocating(true);
     try {
       const c = await getCurrentPosition();
-      choose({ label: 'Your current location', kind: 'gps', lat: c.lat, lng: c.lng });
+      const tz = browserTimeZone();
+      choose(savedFromDevice(await nameDevicePlace(placeFromDevice(c, tz), readPlaceCookie())));
     } catch (e) {
       setGeoError(errorMessage(e, t('location.error.unavailable')));
     } finally {
