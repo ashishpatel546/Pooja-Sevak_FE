@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { serverApiBase } from '@/lib/api';
 import { dateKeyIn } from '@/lib/format';
+import { isPanchangDate } from '@/lib/panchang-date';
 import { DEFAULT_PLACE, parsePlaceCookie, PLACE_COOKIE, placeQuery, samePlace, type Place } from '@/lib/place';
 import type { Observance, ObservanceKey, PanchangDay, PanchangMonth, ServiceDefinition } from '@/lib/types';
 
@@ -66,6 +67,8 @@ export type PanchangView = {
   place: Place;
   /** Today's date key in place.tz. */
   today: string;
+  /** The day `day` is for: the asked-for date, else today. */
+  date: string;
   day: PanchangDay | null;
   upcoming: Observance[] | null;
   /** Festivals over the next `festivalDays` (null when not asked for or unavailable). */
@@ -79,10 +82,12 @@ export type LoadPanchangOptions = {
   festivalDays?: number;
   /** Also load every day of the current month (calendar grid). */
   month?: boolean;
+  /** Show this day (YYYY-MM-DD) instead of today; ignored when invalid. */
+  date?: string | null;
 };
 
 /**
- * Today's panchang and the next `days` of observances for the visitor's place,
+ * Today's (or `opts.date`'s) panchang and the next `days` of observances for the visitor's place,
  * plus festivals and the month grid when asked. If the API cannot answer for that
  * place at all, falls back to Lucknow so the page still has something true to
  * show (and says so via `place`).
@@ -91,13 +96,14 @@ export async function loadPanchang(days: number, opts: LoadPanchangOptions = {})
   const requested = await getPlace();
   const load = async (place: Place) => {
     const today = todayKey(place.tz);
+    const date = opts.date && isPanchangDate(opts.date) ? opts.date : today;
     const [day, upcoming, festivals, month] = await Promise.all([
-      fetchPanchangDay(today, place),
+      fetchPanchangDay(date, place),
       fetchUpcoming(days, today, place),
       opts.festivalDays ? fetchUpcoming(opts.festivalDays, today, place, ['festival']) : null,
       opts.month ? fetchPanchangMonth(today.slice(0, 7), place) : null,
     ]);
-    return { place, today, day, upcoming, festivals, month };
+    return { place, today, date, day, upcoming, festivals, month };
   };
   const view = await load(requested);
   if (!view.day && !view.upcoming && !samePlace(requested, DEFAULT_PLACE)) {

@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { RefreshCw, Sparkles, Sunrise, Sunset } from 'lucide-react';
 import { useFormat } from '@/i18n';
 import { formatTimeIn, zoneAbbr } from '@/lib/format';
+import { panchangHref } from '@/lib/panchang-date';
 import { IST_ZONE, samePlace, type Place } from '@/lib/place';
 import type { PanchangDay } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Mandala } from '@/components/brand/mandala';
 import { MoonPhase } from './moon-phase';
 import { observanceId, pakshaOf, tithiInPaksha } from './observance';
+import { PanchangDateNav } from './panchang-date-nav';
 import { PlaceControl } from './place-control';
 import { TithiTimeline } from './tithi-timeline';
 import { usePlaceName } from './use-place';
@@ -31,19 +33,22 @@ function Fact({ label, value, icon }: { label: string; value: string; icon?: Rea
 }
 
 /**
- * Twilight hero for /panchang: today's tithi set large beside the moon as it
+ * Twilight hero for /panchang: the chosen day's (default today's) tithi set large beside the moon as it
  * looks tonight, with paksha, month, nakshatra and sunrise/sunset in the
  * place's own time zone (with the zone named when it isn't IST).
  */
 export function PanchangToday({
   day,
   today,
+  date = today,
   place,
   requested,
 }: {
   day: PanchangDay | null;
   /** Today's date key in place.tz. */
   today: string;
+  /** The day shown (YYYY-MM-DD); defaults to today. */
+  date?: string;
   /** The place the data is for. */
   place: Place;
   /** The place the visitor asked for (differs only when we had to fall back to Lucknow). */
@@ -52,7 +57,7 @@ export function PanchangToday({
   const f = useFormat();
   const { t, locale, pakshaName, typeName, text } = usePanchangText();
   const name = usePlaceName();
-  const dateLine = f.dateKey(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLine = f.dateKey(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const hi = locale === 'hi';
   const ist = place.tz === IST_ZONE;
   const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: !ist, spoken: true });
@@ -70,6 +75,7 @@ export function PanchangToday({
           <h1 id="panchang-title" className="text-lg text-[#fbe3b6]/90 sm:text-xl">
             {t('hero.title', { date: dateLine, place: name(place) })}
           </h1>
+          <PanchangDateNav date={date} today={today} tz={place.tz} className="mt-4" />
 
           {day ? (
             <>
@@ -88,7 +94,7 @@ export function PanchangToday({
                 })}
               </p>
 
-              <TithiTimeline day={day} tz={place.tz} className="mt-8" />
+              <TithiTimeline day={day} tz={place.tz} live={date === today} className="mt-8" />
 
               <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
                 <Fact label={t('hero.nakshatra')} value={text(day, 'nakshatra')} />
@@ -123,10 +129,11 @@ export function PanchangToday({
             </>
           ) : (
             <div className="mt-4 max-w-xl">
-              <p className="font-heading text-3xl leading-snug text-[#fbe3b6]">{t('hero.unavailableTitle')}</p>
+              <p className="font-heading text-3xl leading-snug text-[#fbe3b6]">{t(date === today ? 'hero.unavailableTitle' : 'hero.unavailableDayTitle')}
+              </p>
               <p className="mt-2">{t('hero.unavailableText')}</p>
               <Link
-                href="/panchang"
+                href={panchangHref(date, today)}
                 className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full px-1 font-medium text-diya underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-diya/50 focus-visible:outline-none"
               >
                 <RefreshCw className="size-4" aria-hidden="true" />

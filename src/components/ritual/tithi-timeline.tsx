@@ -26,9 +26,11 @@ function useClientNow(): number | null {
 type Phase = 'done' | 'now' | 'next';
 
 /** Words and positions shared by the full timeline and the one-line summary. */
-function useTithiTimes(day: PanchangDay, tz: string) {
+function useTithiTimes(day: PanchangDay, tz: string, live: boolean) {
   const { t, locale, tithiName } = usePanchangText();
-  const now = useClientNow();
+  const clientNow = useClientNow();
+  /** Countdowns and the "now" lamp only make sense on today's page. */
+  const now = live ? clientNow : null;
   return useMemo(() => {
     const tithis = day.tithis ?? [];
     const dayStart = midnightIn(day.date, tz).getTime();
@@ -41,10 +43,19 @@ function useTithiTimes(day: PanchangDay, tz: string) {
     const clock = (iso: string) => formatTimeIn(iso, tz, locale, { spoken: true });
     const weekday = (iso: string) =>
       new Intl.DateTimeFormat(INTL_LOCALE[locale], { timeZone: tz, weekday: 'long' }).format(new Date(iso));
-    /** "today 12:50 pm" / "आज दोपहर 12:50"; other days by name in Hindi, where कल is ambiguous. */
+    /**
+     * Today: "today 12:50 pm" / "आज दोपहर 12:50" (other days by name in Hindi,
+     * where कल is ambiguous). Any other day: by weekday, "Sunday 9:04 am".
+     */
     const when = (iso: string) => {
       const ms = new Date(iso).getTime();
-      const key = ms < dayStart ? 'times.yesterday' : ms >= dayEnd ? 'times.tomorrow' : 'times.today';
+      const key = !live
+        ? 'times.onDay'
+        : ms < dayStart
+          ? 'times.yesterday'
+          : ms >= dayEnd
+            ? 'times.tomorrow'
+            : 'times.today';
       return t(key, { time: clock(iso), weekday: weekday(iso) });
     };
     const duration = (ms: number) => {
@@ -64,11 +75,128 @@ function useTithiTimes(day: PanchangDay, tz: string) {
     const nowPct = now !== null && now >= dayStart && now < dayEnd ? pct(now) : null;
     /** Full name in the visitor's language. */
     const name = (x: DayTithi) => (locale === 'hi' ? x.name_hi : x.name_en);
-    /** Bare name of the tithi after `x` ("Dashami"). */
-    const nextName = (x: DayTithi) => tithiName((x.tithi % 30) + 1);
 
-    return { t, tithis, now, pct, nowPct, clock, when, duration, phase, name, nextName, tithiName };
-  }, [day.tithis, day.date, tz, t, locale, tithiName, now]);
+    return { t, tithis, now, pct, nowPct, clock, when, duration, phase, name, tithiName };
+  }, [day.tithis, day.date, tz, t, locale, tithiName, now, live]);
+}
+
+type Times = ReturnType<typeof useTithiTimes>;
+
+/** Label colours around the ribbon; the ribbon itself is always a strip of night sky. */
+const INK = {
+  dark: {
+    ribbon: 'bg-[#0f0a1f]/70 ring-1 ring-[#fbe3b6]/20',
+    change: 'text-[#fbe3b6]',
+    now: 'text-[#fff4e0]',
+    sun: 'text-[#f4e6d4]/70',
+  },
+  light: {
+    ribbon: 'bg-sandhya ring-1 ring-diya/45',
+    change: 'font-medium text-heading',
+    now: 'text-foreground',
+    sun: 'text-muted-foreground',
+  },
+};
+
+/**
+ * Midnight-to-midnight strip: daylight lit, each tithi a band split at the
+ * instant it changes, a lamp at "now", sunrise and sunset beneath. Decorative;
+ * the same facts are always listed as text next to it.
+ */
+function Ribbon({
+  x,
+  day,
+  tone,
+  className,
+}: {
+  x: Times;
+  day: PanchangDay;
+  tone: keyof typeof INK;
+  className?: string;
+}) {
+  const ink = INK[tone];
+  return (
+  <div className={className} aria-hidden="true">
+    <div className="relative">
+      {/* Change instants, labelled above the ribbon */}
+      {x.tithis.slice(1).map((d) => {
+        const p = x.pct(d.start);
+        return (
+          <span
+            key={`b-${d.start}`}
+            className={cn('absolute bottom-full mb-1.5 -translate-x-1/2 text-xs whitespace-nowrap', ink.change)}
+            style={{ left: `${Math.min(88, Math.max(12, p))}%` }}
+            suppressHydrationWarning
+          >
+            {x.clock(d.start)}
+          </span>
+        );
+      })}
+
+      <div className={cn('relative h-12 overflow-hidden rounded-xl', ink.ribbon)}>
+        {/* Daylight */}
+        <div
+          className="absolute inset-y-0 bg-[linear-gradient(90deg,transparent,rgb(251_227_182/0.13)_18%,rgb(251_227_182/0.13)_82%,transparent)]"
+          style={{ left: `${x.pct(day.sunrise)}%`, width: `${x.pct(day.sunset) - x.pct(day.sunrise)}%` }}
+        />
+        {x.tithis.map((d, i) => {
+          const left = x.pct(d.start);
+          const width = x.pct(d.end) - left;
+          const phase = x.phase(d);
+          return (
+            <div
+              key={d.start}
+              className={cn(
+                'absolute inset-y-0 flex items-center justify-center px-2',
+                i > 0 && 'border-l-2 border-diya',
+                phase === 'now' && 'bg-white/8 shadow-[inset_0_-3px_0_var(--diya)]',
+                phase === 'done' && 'opacity-55',
+              )}
+              style={{ left: `${left}%`, width: `${width}%` }}
+            >
+              {width > 14 && (
+                <span className="truncate text-sm font-medium text-[#fff4e0]">{x.tithiName(d.tithi)}</span>
+              )}
+            </div>
+          );
+        })}
+        {x.nowPct !== null && (
+          <div className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-[#fff4e0]" style={{ left: `${x.nowPct}%` }} />
+        )}
+      </div>
+
+      {x.nowPct !== null && (
+        <span
+          className={cn('absolute top-full mt-1 -translate-x-1/2 text-xs font-semibold whitespace-nowrap', ink.now)}
+          style={{ left: `${Math.min(94, Math.max(6, x.nowPct))}%` }}
+        >
+          <span className="mx-auto mb-0.5 block size-2 rounded-full bg-diya shadow-[0_0_10px_3px_rgb(240_179_86/0.7)] motion-safe:animate-pulse" />
+          {x.t('times.nowMark')}
+        </span>
+      )}
+
+      {/* Sunrise and sunset under the ribbon, unless "now" sits on top of them */}
+      {(
+        [
+          [day.sunrise, Sunrise],
+          [day.sunset, Sunset],
+        ] as const
+      ).map(([iso, Icon]) =>
+        x.nowPct !== null && Math.abs(x.pct(iso) - x.nowPct) < 9 ? null : (
+          <span
+            key={iso}
+            className={cn('absolute top-full mt-1.5 flex -translate-x-1/2 items-center gap-1 text-xs whitespace-nowrap', ink.sun)}
+            style={{ left: `${x.pct(iso)}%` }}
+            suppressHydrationWarning
+          >
+            <Icon className="size-3.5 text-diya" />
+            {x.clock(iso)}
+          </span>
+        ),
+      )}
+    </div>
+  </div>
+  );
 }
 
 /**
@@ -76,8 +204,19 @@ function useTithiTimes(day: PanchangDay, tz: string) {
  * daylight hours lit, each tithi as a band and a lamp at "now", then the tithis
  * in order with when each began and ends.
  */
-export function TithiTimeline({ day, tz, className }: { day: PanchangDay; tz: string; className?: string }) {
-  const x = useTithiTimes(day, tz);
+export function TithiTimeline({
+  day,
+  tz,
+  live = true,
+  className,
+}: {
+  day: PanchangDay;
+  tz: string;
+  /** The day is today: show the "now" lamp, countdowns and today/tomorrow words. */
+  live?: boolean;
+  className?: string;
+}) {
+  const x = useTithiTimes(day, tz, live);
   if (!x.tithis.length) return null;
   const { t } = x;
   const udaya = x.tithis.some((d) => d.at_sunrise);
@@ -89,87 +228,7 @@ export function TithiTimeline({ day, tz, className }: { day: PanchangDay; tz: st
         {t('times.title')}
       </h2>
 
-      {/* Ribbon: decorative summary of the list below. */}
-      <div className="mt-9 mb-9" aria-hidden="true">
-        <div className="relative">
-          {/* Change instants, labelled above the ribbon */}
-          {x.tithis.slice(1).map((d) => {
-            const p = x.pct(d.start);
-            return (
-              <span
-                key={`b-${d.start}`}
-                className="absolute bottom-full mb-1.5 -translate-x-1/2 text-xs whitespace-nowrap text-[#fbe3b6]"
-                style={{ left: `${Math.min(88, Math.max(12, p))}%` }}
-                suppressHydrationWarning
-              >
-                {x.clock(d.start)}
-              </span>
-            );
-          })}
-
-          <div className="relative h-12 overflow-hidden rounded-xl bg-[#0f0a1f]/70 ring-1 ring-[#fbe3b6]/20">
-            {/* Daylight */}
-            <div
-              className="absolute inset-y-0 bg-[linear-gradient(90deg,transparent,rgb(251_227_182/0.13)_18%,rgb(251_227_182/0.13)_82%,transparent)]"
-              style={{ left: `${x.pct(day.sunrise)}%`, width: `${x.pct(day.sunset) - x.pct(day.sunrise)}%` }}
-            />
-            {x.tithis.map((d, i) => {
-              const left = x.pct(d.start);
-              const width = x.pct(d.end) - left;
-              const phase = x.phase(d);
-              return (
-                <div
-                  key={d.start}
-                  className={cn(
-                    'absolute inset-y-0 flex items-center justify-center px-2',
-                    i > 0 && 'border-l-2 border-diya',
-                    phase === 'now' && 'bg-diya/22',
-                    phase === 'done' && 'opacity-55',
-                  )}
-                  style={{ left: `${left}%`, width: `${width}%` }}
-                >
-                  {width > 14 && (
-                    <span className="truncate text-sm font-medium text-[#fff4e0]">{x.tithiName(d.tithi)}</span>
-                  )}
-                </div>
-              );
-            })}
-            {x.nowPct !== null && (
-              <div className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-[#fff4e0]" style={{ left: `${x.nowPct}%` }} />
-            )}
-          </div>
-
-          {x.nowPct !== null && (
-            <span
-              className="absolute top-full mt-1 -translate-x-1/2 text-xs font-semibold whitespace-nowrap text-[#fff4e0]"
-              style={{ left: `${Math.min(94, Math.max(6, x.nowPct))}%` }}
-            >
-              <span className="mx-auto mb-0.5 block size-2 rounded-full bg-diya shadow-[0_0_10px_3px_rgb(240_179_86/0.7)] motion-safe:animate-pulse" />
-              {t('times.nowMark')}
-            </span>
-          )}
-
-          {/* Sunrise and sunset under the ribbon, unless "now" sits on top of them */}
-          {(
-            [
-              [day.sunrise, Sunrise],
-              [day.sunset, Sunset],
-            ] as const
-          ).map(([iso, Icon]) =>
-            x.nowPct !== null && Math.abs(x.pct(iso) - x.nowPct) < 9 ? null : (
-              <span
-                key={iso}
-                className="absolute top-full mt-1.5 flex -translate-x-1/2 items-center gap-1 text-xs whitespace-nowrap text-[#f4e6d4]/70"
-                style={{ left: `${x.pct(iso)}%` }}
-                suppressHydrationWarning
-              >
-                <Icon className="size-3.5 text-diya" />
-                {x.clock(iso)}
-              </span>
-            ),
-          )}
-        </div>
-      </div>
+      <Ribbon x={x} day={day} tone="dark" className="mt-9 mb-9" />
 
       <ol className="divide-y divide-[#fbe3b6]/15 border-y border-[#fbe3b6]/15">
         {x.tithis.map((d) => {
@@ -234,25 +293,50 @@ export function TithiTimeline({ day, tz, className }: { day: PanchangDay; tz: st
 }
 
 /**
- * One line for compact cards: "Navami until today 12:50 pm, then Dashami".
- * Follows the clock once mounted, so it names whichever tithi is running now.
+ * Compact dainik panchang for light cards (home page): the ribbon, then each
+ * tithi with its moon, when it began and ends, and time left for the current one.
  */
-export function TithiChangeLine({ day, tz, className }: { day: PanchangDay; tz: string; className?: string }) {
-  const x = useTithiTimes(day, tz);
-  const current = x.tithis.find((d) => x.phase(d) === 'now') ?? x.tithis.find((d) => d.at_sunrise);
-  if (!current) return null;
-  const text =
-    x.tithis.length === 1
-      ? x.t('times.lineAllDay', { tithi: x.tithiName(current.tithi), when: x.when(current.end) })
-      : x.t('times.line', {
-          tithi: x.tithiName(current.tithi),
-          when: x.when(current.end),
-          next: x.nextName(current),
-        });
+export function TithiStrip({ day, tz, className }: { day: PanchangDay; tz: string; className?: string }) {
+  const x = useTithiTimes(day, tz, true);
+  if (!x.tithis.length) return null;
+  const { t } = x;
   return (
-    <p className={cn('flex items-start gap-1.5 text-sm', className)} suppressHydrationWarning>
-      <Clock className="mt-0.5 size-4 shrink-0 text-diya" aria-hidden="true" />
-      <span>{text}</span>
-    </p>
+    <div className={className}>
+      <h3 className="flex items-center gap-2 font-sans text-sm font-semibold text-muted-foreground">
+        <Clock className="size-4 text-diya" aria-hidden="true" />
+        {t('times.title')}
+      </h3>
+      <Ribbon x={x} day={day} tone="light" className="mt-8 mb-9" />
+      <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+        {x.tithis.map((d) => {
+          const phase = x.phase(d);
+          return (
+            <li
+              key={d.start}
+              className={cn('flex min-w-0 items-start gap-2.5', phase === 'done' && 'opacity-60')}
+              aria-current={phase === 'now' ? 'time' : undefined}
+            >
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-sandhya">
+                <MoonPhase tithi={d.tithi} tone="gold" className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-x-2 font-semibold text-foreground">
+                  {x.name(d)}
+                  {phase === 'now' && x.now !== null && (
+                    <span className="rounded-full bg-diya/20 px-2 text-xs font-medium text-heading">
+                      {t('times.left', { time: x.duration(new Date(d.end).getTime() - x.now) })}
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                  <span className="whitespace-nowrap">{t('times.from', { when: x.when(d.start) })}</span>{' '}
+                  <span className="whitespace-nowrap">{t('times.until', { when: x.when(d.end) })}</span>
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
