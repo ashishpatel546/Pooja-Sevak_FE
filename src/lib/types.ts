@@ -745,6 +745,18 @@ export type PanchangPlace = {
   label?: string | null; // e.g. 'Toronto' / 'लखनऊ'
 };
 
+/** A tithi overlapping a civil day, with its exact start and end. */
+export type DayTithi = {
+  tithi: number;
+  name_en: string; // 'Shukla Navami'
+  name_hi: string;
+  paksha: Paksha;
+  start: string; // ISO; can fall on the previous day
+  end: string; // ISO; can fall on the next day
+  /** Prevailing at this day's sunrise (udaya tithi). */
+  at_sunrise: boolean;
+};
+
 export type PanchangDay = {
   location: PanchangPlace;
   date: string;
@@ -758,11 +770,13 @@ export type PanchangDay = {
   lunar_month_hi: string;
   nakshatra_en: string;
   nakshatra_hi: string;
+  /** Tithis overlapping the day, local midnight to midnight (missing on older APIs). */
+  tithis?: DayTithi[];
   observances: Observance[];
 };
 
 /** One day of a month grid: the day panchang with observance names only. */
-export type PanchangMonthDay = Omit<PanchangDay, 'location' | 'observances'> & {
+export type PanchangMonthDay = Omit<PanchangDay, 'location' | 'observances' | 'tithis'> & {
   observances: Pick<Observance, 'key' | 'festival' | 'date' | 'end_date' | 'name_en' | 'name_hi'>[];
 };
 

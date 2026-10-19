@@ -12,6 +12,7 @@ import { MoonPhase } from '@/components/ritual/moon-phase';
 import { ObservanceIcon } from '@/components/ritual/observance-icon';
 import { isOnDay, observanceId, pakshaOf } from '@/components/ritual/observance';
 import { PlaceControl } from '@/components/ritual/place-control';
+import { TithiStrip } from '@/components/ritual/tithi-timeline';
 import { useDays } from '@/components/ritual/use-days';
 import { usePanchangText } from '@/components/ritual/use-panchang-text';
 import { usePlaceName } from '@/components/ritual/use-place';
@@ -91,7 +92,7 @@ export function PanchangGlance({
   const days = useDays(place.tz);
   const hi = locale === 'hi';
 
-  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: true });
+  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: true, spoken: true });
   const dateLine = f.dateKey(today, {
     weekday: 'long',
     day: 'numeric',
@@ -119,7 +120,7 @@ export function PanchangGlance({
       />
       <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1.1fr)]">
         {/* Today */}
-        <div className="min-w-0 p-5 sm:p-7">
+        <div className="order-0 min-w-0 p-5 sm:p-7">
           <h2
             id="glance-title"
             className={cn('flex items-center gap-2 text-2xl', hi ? 'leading-[1.4]' : 'leading-tight')}
@@ -155,8 +156,15 @@ export function PanchangGlance({
           </p>
         </div>
 
+        {/* Tithi timings: right under today's tithi on phones, a full-width band below on wider screens. */}
+        <TithiStrip
+          day={day}
+          tz={place.tz}
+          className="order-1 min-w-0 border-t border-dashed border-diya/30 p-5 sm:px-7 md:order-last md:col-span-2 lg:col-span-3"
+        />
+
         {/* Sky */}
-        <div className="min-w-0 border-t border-dashed border-diya/30 p-5 sm:p-7 md:border-t-0 md:border-l">
+        <div className="order-2 min-w-0 border-t border-dashed border-diya/30 p-5 sm:p-7 md:border-t-0 md:border-l">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-1">
             <div className="col-span-2 sm:col-span-1 md:col-span-2 lg:col-span-1">
               <Fact label={tp('hero.nakshatra')} value={text(day, 'nakshatra')} />
@@ -188,7 +196,7 @@ export function PanchangGlance({
         </div>
 
         {/* Coming up */}
-        <div className="min-w-0 border-t border-dashed border-diya/30 p-5 sm:p-7 md:col-span-2 lg:col-span-1 lg:border-t-0 lg:border-l">
+        <div className="order-3 min-w-0 border-t border-dashed border-diya/30 p-5 sm:p-7 md:col-span-2 lg:col-span-1 lg:border-t-0 lg:border-l">
           {next.length > 0 && (
             <>
               <h3 className="font-sans text-sm font-semibold text-muted-foreground">{t('glance.next')}</h3>

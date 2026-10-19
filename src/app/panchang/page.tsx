@@ -25,12 +25,12 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 const FESTIVAL_DAYS = 366;
 
 export default async function PanchangPage({ searchParams }: Props) {
-  const [{ requested, place, today, day, upcoming, festivals }, catalog, t, locale, query] = await Promise.all([
-    loadPanchang(90, { festivalDays: FESTIVAL_DAYS }),
+  const query = await searchParams;
+  const [{ requested, place, today, date, day, upcoming, festivals }, catalog, t, locale] = await Promise.all([
+    loadPanchang(90, { festivalDays: FESTIVAL_DAYS, date: typeof query.date === 'string' ? query.date : null }),
     fetchCatalog(),
     getT('panchang'),
     getLocale(),
-    searchParams,
   ]);
   const pitru = activePitruPaksha(today, day?.observances, upcoming);
   const pujaNames = pujaNamesFrom(catalog);
@@ -40,7 +40,7 @@ export default async function PanchangPage({ searchParams }: Props) {
   return (
     <>
       <PlaceSync requested={requested} />
-      <PanchangToday day={day} today={today} place={place} requested={requested} />
+      <PanchangToday day={day} today={today} date={date} place={place} requested={requested} />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         {pitru && <PitruPakshaBand observance={pitru} className="mb-16" tz={place.tz} />}

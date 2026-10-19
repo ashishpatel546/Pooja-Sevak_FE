@@ -116,6 +116,30 @@ export function dateKeyIn(tz: string, addDays = 0, from: Date = new Date()): str
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(d);
 }
 
+/** Offset of `tz` from UTC at `at`, in ms. */
+function offsetIn(at: Date, tz: string): number {
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(at);
+  const n = (type: string) => Number(p.find((x) => x.type === type)?.value);
+  const wall = Date.UTC(n('year'), n('month') - 1, n('day'), n('hour'), n('minute'), n('second'));
+  return wall - Math.floor(at.getTime() / 1000) * 1000;
+}
+
+/** The instant a YYYY-MM-DD day begins in `tz` (local midnight). */
+export function midnightIn(key: string, tz: string): Date {
+  const wall = Date.parse(`${key}T00:00:00Z`);
+  const guess = wall - offsetIn(new Date(wall), tz);
+  return new Date(wall - offsetIn(new Date(guess), tz));
+}
+
 /** Whole days from today in `tz` to a YYYY-MM-DD key; negative for the past. */
 export function daysUntilIn(key: string, tz: string, from: Date = new Date()): number {
   const today = Date.parse(`${dateKeyIn(tz, 0, from)}T00:00:00Z`);
@@ -149,13 +173,15 @@ export function formatTimeIn(
   iso: string | Date,
   tz: string,
   locale?: Locale,
-  opts: { zone?: boolean } = {},
+  opts: { zone?: boolean; spoken?: boolean } = {},
 ): string {
+  // `spoken`: Hindi reads the part of day ("दोपहर 12:50") instead of am/pm.
+  const spoken = opts.spoken && locale === 'hi';
   const time = new Intl.DateTimeFormat(tag(locale), {
     timeZone: tz,
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    ...(spoken ? { dayPeriod: 'short' } : { hour12: true }),
   }).format(new Date(iso));
   return opts.zone ? `${time} ${zoneAbbr(tz, iso)}` : time;
 }
