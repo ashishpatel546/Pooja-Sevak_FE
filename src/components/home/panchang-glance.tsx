@@ -12,6 +12,7 @@ import { MoonPhase } from '@/components/ritual/moon-phase';
 import { ObservanceIcon } from '@/components/ritual/observance-icon';
 import { isOnDay, observanceId, pakshaOf } from '@/components/ritual/observance';
 import { PlaceControl } from '@/components/ritual/place-control';
+import { TithiChangeLine } from '@/components/ritual/tithi-timeline';
 import { useDays } from '@/components/ritual/use-days';
 import { usePanchangText } from '@/components/ritual/use-panchang-text';
 import { usePlaceName } from '@/components/ritual/use-place';
@@ -91,7 +92,7 @@ export function PanchangGlance({
   const days = useDays(place.tz);
   const hi = locale === 'hi';
 
-  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: true });
+  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: true, spoken: true });
   const dateLine = f.dateKey(today, {
     weekday: 'long',
     day: 'numeric',
@@ -147,6 +148,7 @@ export function PanchangGlance({
               </p>
             </div>
           </div>
+          <TithiChangeLine day={day} tz={place.tz} className="mt-3 text-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">
             {tp('hero.monthLine', {
               month: text(day, 'lunar_month'),

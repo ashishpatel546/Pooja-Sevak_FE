@@ -11,6 +11,7 @@ import { Mandala } from '@/components/brand/mandala';
 import { MoonPhase } from './moon-phase';
 import { observanceId, pakshaOf, tithiInPaksha } from './observance';
 import { PlaceControl } from './place-control';
+import { TithiTimeline } from './tithi-timeline';
 import { usePlaceName } from './use-place';
 import { usePanchangText } from './use-panchang-text';
 
@@ -54,7 +55,7 @@ export function PanchangToday({
   const dateLine = f.dateKey(today, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const hi = locale === 'hi';
   const ist = place.tz === IST_ZONE;
-  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: !ist });
+  const time = (iso: string) => formatTimeIn(iso, place.tz, locale, { zone: !ist, spoken: true });
   const zone = ist
     ? t('hero.zoneIst')
     : t('hero.zoneLocal', { place: name(place), zone: zoneAbbr(place.tz, day?.sunrise ?? `${today}T12:00:00Z`) });
@@ -86,6 +87,8 @@ export function PanchangToday({
                   paksha: pakshaName(day.paksha ?? pakshaOf(day.tithi)),
                 })}
               </p>
+
+              <TithiTimeline day={day} tz={place.tz} className="mt-8" />
 
               <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3">
                 <Fact label={t('hero.nakshatra')} value={text(day, 'nakshatra')} />
