@@ -2,7 +2,7 @@ name: Deploy web to stage
 
 # Runs on every push/merge to `development`.
 # Builds the Next.js image on the runner, pushes it to GHCR and rolls it out on the
-# stage VM (https://pujasevak.appme.in). NEXT_PUBLIC_* values are inlined at build
+# stage VM (https://pujasevak.in). NEXT_PUBLIC_* values are inlined at build
 # time, so they come from the `stage` environment's variables. deploy.sh on the VM
 # pulls the image, checks the site and rolls back if it is not healthy.
 on:
@@ -79,7 +79,7 @@ jobs:
       - name: Public check
         run: |
           for i in $(seq 1 10); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' https://pujasevak.appme.in/)
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://pujasevak.in/)
             [ "$code" = 200 ] && { echo "Site reachable (200)"; exit 0; }
             sleep 3
           done
