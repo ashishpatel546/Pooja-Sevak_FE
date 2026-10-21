@@ -82,6 +82,8 @@ const PROMISES = [
 const ONLINE_POINTS = ['panchang', 'time', 'link'] as const;
 const SMARAN_POINTS = ['punyatithi', 'days', 'when'] as const;
 const FAQS = ['book', 'abroad', 'cancel'] as const;
+/** Other ways people spell the brand when searching (the domain is pujasevak.in). */
+const BRAND_SPELLINGS = ['Puja Sevak', 'PujaSevak', 'pujasevak.in'];
 
 /** Catalog pujas for the dakshina grid: active, not already shown as an occasion, most pandits first. */
 function gridPujas(catalog: ServiceDefinition[] | null, exclude: Set<string>, n = 8): ServiceDefinition[] {
@@ -162,8 +164,12 @@ export default async function Home() {
   const placeLabel = placeName(place, locale) ?? tp('place.yourLocation');
   const h2 = cn('text-4xl sm:text-5xl', hi ? 'leading-[1.3]' : 'leading-tight');
 
-  // Brand in both scripts: the visible name for this language, the other as alternateName.
-  const brand = { name: (hi ? hi_common : en_common)['brand.name'], alternateName: (hi ? en_common : hi_common)['brand.name'] };
+  // Brand in both scripts: the visible name for this language; the other script plus the
+  // domain's spellings ("Puja Sevak", pujasevak.in) as alternateName, so searches for any of them match.
+  const brand = {
+    name: (hi ? hi_common : en_common)['brand.name'],
+    alternateName: [(hi ? en_common : hi_common)['brand.name'], ...BRAND_SPELLINGS],
+  };
 
   return (
     <>
