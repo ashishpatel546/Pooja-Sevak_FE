@@ -21,7 +21,7 @@ function compact<T extends Thing>(obj: T): T {
 
 export function organizationSchema(o: {
   name: string;
-  alternateName: string;
+  alternateName: string[];
   description: string;
   area: string;
   /** From the owner-edited business profile; blank values are omitted. */
@@ -47,7 +47,7 @@ export function organizationSchema(o: {
   });
 }
 
-export function websiteSchema(o: { name: string; alternateName: string; description: string }): Thing {
+export function websiteSchema(o: { name: string; alternateName: string[]; description: string }): Thing {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
