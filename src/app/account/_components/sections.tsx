@@ -56,7 +56,12 @@ export function ProfileSection({ user }: { user: AuthUser }) {
       await refreshUser();
       toast.success(t('profile.saved'));
     } catch (err) {
-      toast.error(errorMessage(err));
+      const locked = err instanceof ApiError ? (err.payload as { code?: unknown; kyc_name?: unknown } | null) : null;
+      if (locked?.code === 'name_locked' && typeof locked.kyc_name === 'string') {
+        setErrors({ name: t('profile.nameLocked', { name: locked.kyc_name }) });
+      } else {
+        toast.error(errorMessage(err));
+      }
     } finally {
       setBusy(false);
     }

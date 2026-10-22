@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { BadgeCheck, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import type { PanditProfile } from '@/lib/types';
 import { useFormat, useT } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { VerifiedPill } from '@/components/common/pandit-avatar';
 import { Field, Panel } from '@/components/dashboard/field';
-import { errorMessage } from '@/components/dashboard/use-api';
+import { errorMessage, useApi } from '@/components/dashboard/use-api';
 
 const groupAadhaar = (d: string) => d.replace(/(\d{4})(?=\d)/g, '$1 ');
 
@@ -18,6 +19,21 @@ const groupAadhaar = (d: string) => d.replace(/(\d{4})(?=\d)/g, '$1 ');
 export function maskAadhaar(n: string | null | undefined) {
   const last4 = (n ?? '').replace(/\D/g, '').slice(-4);
   return last4 ? `XXXX XXXX ${last4}` : 'XXXX XXXX XXXX';
+}
+
+const DIGILOCKER_ERRORS = ['invalid_state', 'no_aadhaar', 'already_linked', 'not_configured'] as const;
+
+/** i18n key for a failed DigiLocker start/complete, from the API's `code`. */
+export function digilockerErrorKey(e: unknown) {
+  const code = e instanceof ApiError ? (e.payload as { code?: unknown } | null)?.code : null;
+  const known = DIGILOCKER_ERRORS.find((c) => c === code);
+  return known ? (`kyc.dl.err.${known}` as const) : ('kyc.dl.err.failed' as const);
+}
+
+/** Sends the browser to DigiLocker; resolves only if starting failed. */
+export async function startDigilocker(token: string | null) {
+  const { url } = await api<{ url: string }>('/pandits/me/kyc/digilocker/start', { method: 'POST', token });
+  window.location.assign(url);
 }
 
 export function KycCard({
@@ -36,11 +52,27 @@ export function KycCard({
   const [errors, setErrors] = useState<{ aadhaar?: string; otp?: string; form?: string }>({});
   const [busy, setBusy] = useState(false);
 
+  const dlState = useApi<{ enabled: boolean }>('/pandits/me/kyc/digilocker', token);
+  const digilocker = dlState.data?.enabled ?? null; // null while unknown
+
   const status = profile.verification_status;
   const submitted = !!profile.kyc_submitted_at;
+  const viaDigilocker = !!profile.digilocker_id;
   // A rejected pandit may correct their Aadhaar; otherwise the details are on file.
+  // With DigiLocker on, anyone not yet verified there (e.g. the old form) may verify.
   const showDetails = submitted;
-  const showForm = !submitted || status === 'rejected';
+  const showForm = !submitted || status === 'rejected' || (digilocker === true && !viaDigilocker);
+
+  const verifyWithDigilocker = async () => {
+    setErrors({});
+    setBusy(true);
+    try {
+      await startDigilocker(token);
+    } catch (err) {
+      setErrors({ form: t(digilockerErrorKey(err)) });
+      setBusy(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +112,25 @@ export function KycCard({
     >
       {showDetails && (
         <div className={showForm ? 'mb-6 border-b pb-6' : undefined}>
+          {viaDigilocker && (
+            <p className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-tulsi">
+              <BadgeCheck className="size-4" aria-hidden="true" />
+              {t('kyc.dl.verified')}
+            </p>
+          )}
           <dl className="grid gap-3 sm:grid-cols-2">
+            {viaDigilocker && profile.kyc_name && (
+              <div>
+                <dt className="text-sm text-muted-foreground">{t('kyc.dl.name')}</dt>
+                <dd className="font-medium break-words">{profile.kyc_name}</dd>
+              </div>
+            )}
+            {viaDigilocker && profile.kyc_dob && (
+              <div>
+                <dt className="text-sm text-muted-foreground">{t('kyc.dl.dob')}</dt>
+                <dd className="font-medium">{f.date(profile.kyc_dob)}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-sm text-muted-foreground">{t('kyc.number')}</dt>
               <dd className="font-medium tracking-wider tabular-nums">{maskAadhaar(profile.aadhaar_number)}</dd>
@@ -92,12 +142,37 @@ export function KycCard({
           </dl>
           {status !== 'not_submitted' && (
             <p className="mt-3 text-sm text-muted-foreground">
-              {t(status === 'approved' ? 'kyc.status.approved' : status === 'rejected' ? 'kyc.status.rejected' : 'kyc.status.pending')}
+              {t(
+                status === 'approved'
+                  ? 'kyc.status.approved'
+                  : status === 'rejected'
+                    ? digilocker
+                      ? 'kyc.dl.rejected'
+                      : 'kyc.status.rejected'
+                    : 'kyc.status.pending',
+              )}
             </p>
           )}
         </div>
       )}
-      {showForm && (
+      {showForm && digilocker === null && dlState.loading && <Skeleton className="h-24 w-full rounded-xl" />}
+      {showForm && digilocker === true && (
+        <div className="grid gap-4">
+          <p className="text-sm text-muted-foreground">{t('kyc.dl.hint')}</p>
+          {errors.form && (
+            <p role="alert" className="text-sm text-destructive">
+              {errors.form}
+            </p>
+          )}
+          <div>
+            <Button type="button" size="lg" disabled={busy} onClick={verifyWithDigilocker}>
+              <ShieldCheck aria-hidden="true" />
+              {busy ? t('kyc.dl.redirecting') : t(viaDigilocker ? 'kyc.dl.again' : 'kyc.dl.button')}
+            </Button>
+          </div>
+        </div>
+      )}
+      {showForm && digilocker !== true && !dlState.loading && (
         <form onSubmit={submit} noValidate className="grid gap-5 sm:grid-cols-2">
           <Field id="aadhaar" label={t('kyc.number')} error={errors.aadhaar} hint={t('kyc.numberHint')}>
             <Input

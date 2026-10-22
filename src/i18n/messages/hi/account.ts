@@ -57,6 +57,7 @@ const account: Record<keyof typeof en, string> = {
   'profile.mobileError': 'कृपया 10 अंकों का भारतीय मोबाइल नंबर लिखें।',
   'profile.save': 'जानकारी सहेजें',
   'profile.saved': 'आपकी जानकारी सहेज ली गई है।',
+  'profile.nameLocked': 'आपका नाम DigiLocker से सत्यापित है, इसलिए यह आधार के अनुसार ही रहेगा: “{name}”।',
   'profile.mobileVerified': '+91 {mobile} सत्यापित है।',
   'profile.mobileUnverified': '+91 {mobile} अभी सत्यापित नहीं है।',
   'profile.noMobile': 'आपने अभी तक मोबाइल नंबर नहीं जोड़ा है।',
