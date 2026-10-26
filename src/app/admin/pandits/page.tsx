@@ -234,6 +234,22 @@ function PanditRow({ p, onAction }: { p: AdminPandit; onAction: (kind: 'approve'
           <dd className="tracking-wider whitespace-nowrap tabular-nums">{p.aadhaar_number ? maskAadhaar(p.aadhaar_number) : '—'}</dd>
         </div>
         <div className="col-span-2">
+          <dt className="text-muted-foreground">{t('pandits.digilocker')}</dt>
+          {p.digilocker_id ? (
+            <dd className="break-words">
+              {p.kyc_name}
+              {p.kyc_dob && <> · {t('pandits.digilockerDob', { date: date(p.kyc_dob) })}</>}
+              {p.kyc_name_matches != null && (
+                <span className={`block text-xs ${p.kyc_name_matches ? 'text-tulsi' : 'font-medium text-destructive'}`}>
+                  {t(p.kyc_name_matches ? 'pandits.nameMatch' : 'pandits.nameMismatch')}
+                </span>
+              )}
+            </dd>
+          ) : (
+            <dd className="text-muted-foreground">{t('pandits.digilockerNone')}</dd>
+          )}
+        </div>
+        <div className="col-span-2">
           <dt className="text-muted-foreground">{t('pandits.pujas')}</dt>
           <dd>{services.length ? services.map((s) => pick(s, 'name', f.locale)).join(', ') : t('pandits.noPujas')}</dd>
         </div>

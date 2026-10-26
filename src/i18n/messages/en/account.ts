@@ -55,6 +55,7 @@ const account = {
   'profile.mobileError': 'Enter a 10-digit Indian mobile number.',
   'profile.save': 'Save details',
   'profile.saved': 'Your details are saved.',
+  'profile.nameLocked': 'Your name is verified with DigiLocker, so it must stay as on your Aadhaar: “{name}”.',
   'profile.mobileVerified': '+91 {mobile} is verified.',
   'profile.mobileUnverified': '+91 {mobile} isn’t verified yet.',
   'profile.noMobile': 'You haven’t added a mobile number yet.',

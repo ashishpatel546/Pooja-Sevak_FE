@@ -142,6 +142,15 @@ export type PanditProfile = {
   aadhaar_number: string | null;
   /** Set only when a real KYC provider confirms the Aadhaar. */
   aadhaar_verified_at: string | null;
+  /** Verified legal name (DigiLocker, else the admin-approved name). Not in booking payloads. */
+  kyc_name?: string | null;
+  /** DigiLocker account that verified this pandit; null until DigiLocker KYC. */
+  digilocker_id?: string | null;
+  /** YYYY-MM-DD, from DigiLocker. */
+  kyc_dob?: string | null;
+  kyc_pan?: string | null;
+  /** Advisory for admins: the profile name looked like the DigiLocker name. */
+  kyc_name_matches?: boolean | null;
   average_rating: number;
   total_reviews: number;
 };
