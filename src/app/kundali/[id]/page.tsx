@@ -16,7 +16,7 @@ import { PageShell } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { useApiQuery } from '@/components/customer/use-api';
 import type { ChartStyle } from '@/components/kundali/kundali-chart';
-import { HindiNamesButton } from '@/components/kundali/hindi-names';
+import { EditNamesButton } from '@/components/kundali/hindi-names';
 import { KundaliReportBody } from '@/components/kundali/kundali-report';
 import { MilanReportBody } from '@/components/kundali/milan-report';
 import { fmtCivilDate, fmtDate, useReportT } from '@/components/kundali/report-kit';
@@ -187,7 +187,7 @@ export default function KundaliReportPage() {
             ]}
             onChange={changeStyle}
           />
-          {token && <HindiNamesButton reportId={r.id} input={r.input} token={token} onSaved={report.reload} />}
+          {token && <EditNamesButton reportId={r.id} input={r.input} token={token} onSaved={report.reload} />}
           <Button size="lg" className="sm:ml-auto" onClick={() => window.print()} aria-describedby="print-hint">
             <Download aria-hidden="true" />
             {t('report.print')}

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { HindiNameField } from './hindi-names';
 import { TimePicker } from './time-picker';
 
 export type BirthDraft = {
@@ -216,23 +217,15 @@ export function BirthFields({
             className="h-11 text-base"
           />
           {showHindi && (
-            <div className="mt-2 grid gap-1.5">
-              <Label htmlFor={`${id}-name-hi`} className="text-sm font-normal text-muted-foreground">
-                {t('form.nameHi')}
-              </Label>
-              <Input
+            <div className="mt-2">
+              <HindiNameField
                 id={`${id}-name-hi`}
-                lang="hi"
                 value={value.nameHi ?? ''}
-                onChange={(e) => onChange({ ...value, nameHi: e.target.value, nameHiEdited: true })}
-                autoComplete="off"
-                maxLength={80}
-                aria-describedby={`${id}-name-hi-hint`}
-                className="h-11 text-base"
+                onChange={(v) => onChange({ ...value, nameHi: v, nameHiEdited: true })}
+                gender={value.gender}
+                label={t('form.nameHi')}
+                hint={t('form.nameHiHint')}
               />
-              <p id={`${id}-name-hi-hint`} className="text-sm text-muted-foreground">
-                {t('form.nameHiHint')}
-              </p>
             </div>
           )}
         </div>
