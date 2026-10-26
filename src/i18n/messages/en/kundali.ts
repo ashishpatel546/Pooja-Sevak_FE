@@ -129,6 +129,8 @@ const kundali = {
   'cover.nakshatra': 'Nakshatra',
   'cover.gunas': 'of 36 gunas',
   'cover.wheelKey': 'In the ring of twelve rashis, the saffron rashi is the lagna and the white dot marks the Moon’s rashi.',
+  'cover.qr': 'Scan to make a free kundali or book a pandit ji',
+  'pdf.page': 'Page',
   'report.title': 'Janam Kundali',
   'report.of': 'of {name}',
   'report.milanTitle': 'Kundali Milan',

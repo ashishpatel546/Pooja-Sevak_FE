@@ -128,6 +128,8 @@ const kundali: Record<keyof typeof en, string> = {
   'cover.nakshatra': 'नक्षत्र',
   'cover.gunas': '36 में से गुण',
   'cover.wheelKey': 'बारह राशियों के चक्र में केसरिया राशि लग्न है और सफ़ेद बिंदु चंद्रमा की राशि दर्शाता है।',
+  'cover.qr': 'स्कैन करें: मुफ़्त कुंडली बनाएँ या पंडित जी बुक करें',
+  'pdf.page': 'पृष्ठ',
   'report.title': 'जन्म कुंडली',
   'report.of': '{name}',
   'report.milanTitle': 'कुंडली मिलान',

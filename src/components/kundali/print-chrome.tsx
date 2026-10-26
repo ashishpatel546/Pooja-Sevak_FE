@@ -17,17 +17,8 @@ export type Contact = { phone: string; email: string };
 /** A small diamond, the shape at the heart of the North Indian chart, marking each corner. */
 function Corner({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className={`absolute size-[6mm] ${className}`}>
-      <rect
-        x="4"
-        y="4"
-        width="12"
-        height="12"
-        transform="rotate(45 10 10)"
-        fill="#fffaf3"
-        stroke="#c99a3a"
-        strokeWidth="1.4"
-      />
+    <svg viewBox="0 0 20 20" aria-hidden="true" className={`fixed z-0 size-[6mm] ${className}`}>
+      <polygon points="10,1.5 18.5,10 10,18.5 1.5,10" fill="#fffaf3" stroke="#c99a3a" strokeWidth="1.4" />
       <circle cx="10" cy="10" r="2.6" fill="#a61b1b" />
     </svg>
   );
@@ -40,14 +31,14 @@ function Corner({ className }: { className: string }) {
 export function PrintFrame({ contact, t }: { contact: Contact; t: ReportT }) {
   return (
     <div aria-hidden="true" className="hidden print:block">
-      <div className="fixed inset-[6mm] z-0 border-[1.6pt] border-kumkum">
-        <div className="absolute inset-[1.2mm] border-[0.8pt] border-[#c99a3a]" />
-        <Corner className="-top-[3mm] -left-[3mm]" />
-        <Corner className="-top-[3mm] -right-[3mm]" />
-        <Corner className="-bottom-[3mm] -left-[3mm]" />
-        <Corner className="-right-[3mm] -bottom-[3mm]" />
-      </div>
-      <div className="fixed inset-x-[7.2mm] bottom-[7.2mm] z-20 flex h-[12mm] items-center gap-4 bg-sandhya px-[5mm] text-[8.5pt] text-[#f4e6d4]">
+      {/* Each piece is fixed on its own: Chrome misplaces nested positioned boxes on repeat pages. */}
+      <div className="fixed inset-x-[6mm] top-[6mm] bottom-[3mm] z-0 border-[1.6pt] border-kumkum" />
+      <div className="fixed inset-x-[7.2mm] top-[7.2mm] bottom-[4.2mm] z-0 border-[0.8pt] border-[#c99a3a]" />
+      <Corner className="top-[3mm] left-[3mm]" />
+      <Corner className="top-[3mm] right-[3mm]" />
+      <Corner className="bottom-0 left-[3mm]" />
+      <Corner className="right-[3mm] bottom-0" />
+      <div className="fixed inset-x-[7.2mm] bottom-[4.2mm] z-20 flex h-[12mm] items-center gap-4 bg-sandhya px-[5mm] text-[8.5pt] text-[#f4e6d4]">
         <span className="flex items-center gap-2">
           <Diya className="-mt-1 size-[7mm]" />
           <span className="font-heading text-[12pt] leading-none whitespace-nowrap text-[#fbe3b6]">{t('cover.brand')}</span>
@@ -93,11 +84,21 @@ export function PrintPages({ children }: { children: ReactNode }) {
       </tbody>
       <tfoot className="hidden print:table-footer-group">
         <tr>
-          <td className="h-[24mm] p-0" />
+          <td className="h-[21mm] p-0" />
         </tr>
       </tfoot>
     </table>
   );
+}
+
+/**
+ * The page box for the PDF: edge to edge, but for a strip at the foot that holds the page
+ * number below the border (not on the cover). `pageLabel` is "Page" in the report's language.
+ */
+export function pageRule(pageLabel: string): string {
+  return `@page { size: A4; margin: 0 0 7mm; @bottom-center { content: "${pageLabel} " counter(page) " / " counter(pages); font: 8pt sans-serif; color: #7a3410; vertical-align: top; padding-top: 1.5mm } }
+    @page :first { @bottom-center { content: none } }
+    @media print { html { print-color-adjust: exact; -webkit-print-color-adjust: exact } }`;
 }
 
 /** The twelve rashis as a ring, the birth lagna lit in saffron and the Moon's rashi marked. */
@@ -221,7 +222,7 @@ function CoverShell({
   prepared: string;
 }) {
   return (
-    <section className="sandhya stars relative z-10 hidden h-[256mm] break-after-page flex-col items-center overflow-hidden px-[10mm] py-[9mm] text-center print:flex">
+    <section className="sandhya stars relative z-10 hidden h-[249mm] break-after-page flex-col items-center overflow-hidden px-[10mm] py-[9mm] text-center print:flex">
       <div className="flex items-center gap-2">
         <Diya className="-mt-1 size-[9mm]" />
         <span className="font-heading text-[16pt] leading-none whitespace-nowrap text-[#fbe3b6]">{t('cover.brand')}</span>
@@ -233,7 +234,14 @@ function CoverShell({
         <h1 className="text-[34pt] leading-tight">{title}</h1>
         {children}
       </div>
-      <p className="pt-[4mm] text-[10pt]">{prepared}</p>
+      <div className="flex w-full items-center justify-between gap-[6mm] pt-[4mm] text-left">
+        <p className="text-[10pt]">{prepared}</p>
+        <div className="flex items-center gap-[3mm]">
+          <p className="max-w-[48mm] text-right text-[8.5pt] leading-snug">{t('cover.qr')}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG; next/image adds nothing in print */}
+          <img src="/kundali-qr.svg" alt="" className="size-[20mm] rounded-[1.5mm] bg-white p-[1mm]" />
+        </div>
+      </div>
     </section>
   );
 }

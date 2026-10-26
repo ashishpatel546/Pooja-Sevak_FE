@@ -21,7 +21,7 @@ import type { ChartStyle } from '@/components/kundali/kundali-chart';
 import { EditNamesButton } from '@/components/kundali/hindi-names';
 import { KundaliReportBody } from '@/components/kundali/kundali-report';
 import { MilanReportBody } from '@/components/kundali/milan-report';
-import { KundaliCover, MilanCover, PrintFrame, PrintPages } from '@/components/kundali/print-chrome';
+import { KundaliCover, MilanCover, PrintFrame, PrintPages, pageRule } from '@/components/kundali/print-chrome';
 import { fmtCivilDate, fmtDate, useReportT } from '@/components/kundali/report-kit';
 
 const STYLE_KEY = 'ps_chart_style';
@@ -105,6 +105,31 @@ export default function KundaliReportPage() {
   const reportLang: Locale = lang ?? report.data?.language ?? 'hi';
   const t = useReportT(reportLang);
 
+  // "Save as PDF" names the file after the page title: "Janam Kundali - Shasvika Patel".
+  const input = report.data?.input;
+  const pdfTitle = !input
+    ? ''
+    : 'person' in input
+      ? `${t('report.title')} - ${input.person.name || t('report.ofNewborn')}`
+      : `${t('report.milanTitle')} - ${input.boy.name} & ${input.girl.name}`;
+  useEffect(() => {
+    if (!pdfTitle) return;
+    let saved = '';
+    const before = () => {
+      if (document.title !== pdfTitle) saved = document.title;
+      document.title = pdfTitle;
+    };
+    const after = () => {
+      if (saved) document.title = saved;
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, [pdfTitle]);
+
   const changeLang = (next: Locale) => {
     setLang(next);
     if (token) void api(`/kundali/reports/${id}/language`, { method: 'PUT', token, body: { language: next } }).catch(() => {});
@@ -178,7 +203,7 @@ export default function KundaliReportPage() {
     <PageShell className="print:max-w-none print:p-0">
       {/* Edge-to-edge A4 so the border and colours print as designed; the frame sets its own margins. */}
       <style>
-        {'@page { size: A4; margin: 0 } @media print { html { print-color-adjust: exact; -webkit-print-color-adjust: exact } }'}
+        {pageRule(t('pdf.page'))}
       </style>
       <PrintFrame contact={contact} t={t} />
       <div className="mb-6 flex flex-col gap-4 print:hidden">

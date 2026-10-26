@@ -635,14 +635,15 @@ function DashaPanel({ k, lang, t, n, now, grahaName }: Ctx) {
                   <div className="border-t px-4 py-3">
                     <p className="mb-2 text-sm">{t(`dashaAbout.${m.lord}`)}</p>
                     <p className="mb-2 text-sm text-muted-foreground">{t('dasha.antardashas')}</p>
-                    <ul className="grid gap-1 text-sm">
+                    {/* On paper, other mahadashas list antardashas in two columns so two fit on a page. */}
+                    <ul className={cn('grid gap-1 text-sm', !current && 'print:grid-cols-2 print:gap-x-6')}>
                       {m.antardashas.map((a) => {
                         const running = a === ad;
                         return (
                           <li key={a.start} className={cn('rounded-md', running && 'bg-accent font-medium')}>
                             {/* Pratyantar lists print only for the running mahadasha, to keep the PDF readable. */}
                             <details open={running} data-print-skip={current ? undefined : ''}>
-                              <summary className="flex min-h-9 cursor-pointer list-none justify-between gap-3 px-2 py-1 [&::-webkit-details-marker]:hidden">
+                              <summary className="flex min-h-9 cursor-pointer list-none justify-between gap-3 px-2 py-1 print:min-h-0 [&::-webkit-details-marker]:hidden">
                                 <span>
                                   {short(m.lord)}–{grahaName(a.lord)}
                                 </span>
