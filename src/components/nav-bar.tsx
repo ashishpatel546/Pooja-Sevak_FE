@@ -30,6 +30,7 @@ type LinkKey =
   | 'link.browse'
   | 'link.online'
   | 'link.panchang'
+  | 'link.kundali'
   | 'link.reminders'
   | 'link.myBookings'
   | 'link.panditBookings'
@@ -50,6 +51,7 @@ function linksFor(role: Role | undefined): NavLink[] {
     { href: '/browse', label: 'link.browse' },
     { href: '/online', label: 'link.online' },
     { href: '/panchang', label: 'link.panchang' },
+    { href: '/kundali', label: 'link.kundali' },
   ];
   if (role === 'customer')
     return [
@@ -71,6 +73,7 @@ function linksFor(role: Role | undefined): NavLink[] {
     return [
       { href: '/admin', label: 'link.admin' },
       { href: '/pujas', label: 'link.pujas' },
+      { href: '/kundali', label: 'link.kundali' },
     ];
   return [...discover, CONTACT];
 }
@@ -88,7 +91,7 @@ export function NavBar() {
   const current = (href: string) => (isActive(href) ? 'page' : undefined);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/70">
+    <header className="sticky top-0 z-30 border-b print:hidden border-border/70 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/70">
       <nav
         aria-label={t('aria.main')}
         className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-1.5 px-3 min-[360px]:px-4 sm:gap-3 sm:px-6"
