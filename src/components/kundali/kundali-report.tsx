@@ -4,7 +4,7 @@ import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'rea
 import Link from 'next/link';
 import { CircleAlert, Flower2, HandHeart, ShieldCheck, Sparkles } from 'lucide-react';
 import { INTL_LOCALE, type Locale } from '@/i18n/config';
-import { displayName, dms, pickName, type BirthDetails, type DashaPeriod, type Gochar, type GrahaKey, type Kundali, type VargaKey } from '@/lib/kundali';
+import { displayName, dms, pickName, type BirthDetails, type AvGraha, type DashaPeriod, type Gochar, type GrahaKey, type Kundali, type VargaKey, type YoginiPeriod } from '@/lib/kundali';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNow } from '@/components/customer/use-api';
@@ -25,8 +25,8 @@ import {
 } from './report-kit';
 
 const CHARTS: ChartKind[] = ['lagna', 'navamsa', 'chandra'];
-const VARGAS: VargaKey[] = ['d2', 'd3', 'd7', 'd10', 'd12'];
-const SECTIONS = ['basic', 'charts', 'grahas', 'bhavas', 'doshas', 'yogas', 'dasha', 'gochar', 'shani', 'shubh'] as const;
+const VARGAS: VargaKey[] = ['d2', 'd3', 'd4', 'd7', 'd10', 'd12', 'd16', 'd20', 'd24', 'd30', 'd60'];
+const SECTIONS = ['basic', 'charts', 'grahas', 'bhavas', 'ashtakavarga', 'doshas', 'yogas', 'dasha', 'gochar', 'shani', 'shubh'] as const;
 type Section = (typeof SECTIONS)[number];
 
 const within = (p: { start: string; end: string }, now: number) => Date.parse(p.start) <= now && now < Date.parse(p.end);
@@ -86,7 +86,7 @@ export function KundaliReportBody({
     ord: (h) => t(`ordinal.${h}` as Parameters<ReportT>[0]),
   };
 
-  const sections = SECTIONS.filter((s) => s !== 'gochar' || gochar);
+  const sections = SECTIONS.filter((s) => (s !== 'gochar' || gochar) && (s !== 'ashtakavarga' || k.ashtakavarga));
   const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const i = sections.indexOf(section);
     const j =
@@ -103,6 +103,7 @@ export function KundaliReportBody({
     charts: <ChartsPanel {...ctx} />,
     grahas: <GrahasPanel {...ctx} />,
     bhavas: <BhavasPanel {...ctx} />,
+    ashtakavarga: <AshtakavargaPanel {...ctx} />,
     doshas: <DoshasPanel {...ctx} />,
     yogas: <YogasPanel {...ctx} />,
     dasha: <DashaPanel {...ctx} />,
@@ -792,6 +793,125 @@ function DashaPanel({ k, lang, t, n, now, grahaName }: Ctx) {
           })}
         </ol>
         <p className="mt-3 text-sm text-muted-foreground print:hidden">{t('dasha.printNote')}</p>
+      </ReportSection>
+
+      {k.yogini && <YoginiSection k={k} lang={lang} t={t} now={now} grahaName={grahaName} />}
+    </>
+  );
+}
+
+/** Yogini dasha: the mahadashas, with antardashas opened for the running one. */
+function YoginiSection({ k, lang, t, now, grahaName }: Pick<Ctx, 'k' | 'lang' | 't' | 'now' | 'grahaName'>) {
+  const y = k.yogini!;
+  const tz = k.birth.tz;
+  const span = (p: YoginiPeriod) => `${fmtDate(p.start, lang, tz)} – ${fmtDate(p.end, lang, tz)}`;
+  const name = (p: YoginiPeriod) => t('yogini.name', { yogini: t(`yogini.${p.yogini}`), lord: grahaName(p.lord) });
+  const md = y.mahadashas.find((p) => within(p, now));
+  const ad = md?.antardashas.find((p) => within(p, now));
+  // A lifetime is enough: from birth to 100 years on.
+  const life = y.mahadashas.filter((p) => Date.parse(p.end) > Date.parse(k.birth.instant)).slice(0, 18);
+  return (
+    <ReportSection title={t('yogini.title')}>
+      <p className="mb-3 text-muted-foreground">{t('yogini.about')}</p>
+      {md && ad && (
+        <div className="mb-4 grid gap-1 rounded-xl border border-primary bg-accent/40 px-4 py-3 print:break-inside-avoid">
+          <p className="text-sm text-muted-foreground">{t('dasha.nowTitle')}</p>
+          <p className="font-heading text-lg text-heading">
+            {t('yogini.nowLine', { md: name(md), ad: name(ad) })}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('dasha.until', { date: fmtDate(ad.end, lang, tz) })}</p>
+        </div>
+      )}
+      <ol className="grid gap-2">
+        {life.map((m) => {
+          const current = m === md;
+          return (
+            <li key={m.start} className={cn('rounded-xl border print:break-inside-avoid', current && 'border-primary bg-accent/40')}>
+              <details open={current} data-print-skip={current ? undefined : ''}>
+                <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 [&::-webkit-details-marker]:hidden">
+                  <span className="font-medium">{name(m)}</span>
+                  <span className="text-sm text-muted-foreground tabular-nums">{span(m)}</span>
+                </summary>
+                <ul className="grid gap-1 px-4 pb-3 text-sm sm:grid-cols-2 sm:gap-x-6">
+                  {m.antardashas.map((a) => (
+                    <li key={a.start} className={cn('flex justify-between gap-3 rounded-md px-2 py-1', a === ad && 'bg-accent font-medium')}>
+                      <span>{t(`yogini.${a.yogini}`)}</span>
+                      <span className="text-muted-foreground tabular-nums">{span(a)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          );
+        })}
+      </ol>
+    </ReportSection>
+  );
+}
+
+// ── Ashtakavarga ───────────────────────────────────────────────────────────
+
+const AV_GRAHAS: AvGraha[] = ['su', 'mo', 'ma', 'me', 'ju', 've', 'sa'];
+
+function AshtakavargaPanel({ k, lang, t, grahaName }: Ctx) {
+  const av = k.ashtakavarga;
+  if (!av) return null;
+  const strong = av.sav.map((v, s) => (v >= 28 ? s : -1)).filter((s) => s >= 0);
+  const cell = 'px-1.5 py-2 text-center tabular-nums';
+  return (
+    <>
+      <ReportSection title={t('av.title')}>
+        <p className="mb-3 text-muted-foreground">{t('av.about')}</p>
+        <div className="-mx-2 overflow-x-auto px-2">
+          <table className="w-full min-w-[40rem] text-sm">
+            <thead className="text-muted-foreground">
+              <tr className="border-b">
+                <th scope="col" className="py-2 pr-2 text-left font-medium">{t('grahas.graha')}</th>
+                {RASHI_NAMES[lang].map((r, s) => (
+                  <th key={r} scope="col" className={cn(cell, 'font-medium', s === k.lagna.sign && 'text-sindoor')}>
+                    {r}
+                  </th>
+                ))}
+                <th scope="col" className={cn(cell, 'font-medium')}>{t('av.total')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {AV_GRAHAS.map((g) => (
+                <tr key={g} className="border-b border-border/60">
+                  <th scope="row" className="py-2 pr-2 text-left font-medium">{grahaName(g)}</th>
+                  {av.bav[g].map((v, s) => (
+                    <td key={s} className={cn(cell, v >= 5 && 'font-semibold text-tulsi', v <= 2 && 'text-muted-foreground')}>
+                      {v}
+                    </td>
+                  ))}
+                  <td className={cell}>{av.bav[g].reduce((a, b) => a + b, 0)}</td>
+                </tr>
+              ))}
+              <tr className="bg-accent/40 font-semibold">
+                <th scope="row" className="py-2 pr-2 text-left">{t('av.sav')}</th>
+                {av.sav.map((v, s) => (
+                  <td key={s} className={cn(cell, v >= 28 ? 'text-tulsi' : v < 25 && 'text-kumkum')}>
+                    {v}
+                  </td>
+                ))}
+                <td className={cell}>{av.sav.reduce((a, b) => a + b, 0)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">{t('av.lagnaMark')}</p>
+      </ReportSection>
+
+      <ReportSection title={t('av.readTitle')}>
+        <div className="grid gap-2">
+          <p>{t('av.read')}</p>
+          <p>
+            {strong.length
+              ? t('av.strong', { rashis: new Intl.ListFormat(INTL_LOCALE[lang], { type: 'conjunction' }).format(strong.map((s) => RASHI_NAMES[lang][s])) })
+              : t('av.noStrong')}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('av.source')}</p>
+        </div>
       </ReportSection>
     </>
   );

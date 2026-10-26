@@ -79,7 +79,7 @@ export type Dosha = {
 export type YogaKey = 'gajakesari' | 'budhaditya' | 'chandra_mangal' | 'ruchaka' | 'bhadra' | 'hamsa' | 'malavya' | 'shasha';
 export type Yoga = { key: YogaKey; grahas: GrahaKey[]; house: number };
 
-export type VargaKey = 'd2' | 'd3' | 'd7' | 'd9' | 'd10' | 'd12';
+export type VargaKey = 'd2' | 'd3' | 'd4' | 'd7' | 'd9' | 'd10' | 'd12' | 'd16' | 'd20' | 'd24' | 'd30' | 'd60';
 export type Varga = { lagna: number; grahas: Record<GrahaKey, number> };
 
 export type Bhava = { house: number; sign: number; lord: GrahaKey; lord_house: number; grahas: GrahaKey[] };
@@ -127,6 +127,17 @@ export type Gochar = {
     house_from_moon: number;
     favourable: boolean;
   }[];
+};
+
+export type AvGraha = 'su' | 'mo' | 'ma' | 'me' | 'ju' | 've' | 'sa';
+export type Ashtakavarga = { bav: Record<AvGraha, number[]>; sav: number[] };
+
+export type YoginiName = 'mangala' | 'pingala' | 'dhanya' | 'bhramari' | 'bhadrika' | 'ulka' | 'siddha' | 'sankata';
+export type YoginiPeriod = { yogini: YoginiName; lord: GrahaKey; start: string; end: string };
+export type YoginiDasha = {
+  birth_yogini: YoginiName;
+  balance_years: number;
+  mahadashas: (YoginiPeriod & { antardashas: YoginiPeriod[] })[];
 };
 
 export type Kundali = {
@@ -191,6 +202,8 @@ export type Kundali = {
   shani: ShaniPeriod[];
   /** Absent on reports computed before graha strength was added. */
   strength?: GrahaStrength[];
+  ashtakavarga?: Ashtakavarga;
+  yogini?: YoginiDasha;
 };
 
 export type KootaKey = 'varna' | 'vashya' | 'tara' | 'yoni' | 'graha_maitri' | 'gana' | 'bhakoot' | 'nadi';
