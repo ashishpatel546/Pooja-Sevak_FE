@@ -40,11 +40,17 @@ export function PdfActions({
     return blob && new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
   };
 
+  // "Save as PDF" takes its file name from the page title, read while the print window is
+  // open (some browsers show it after print() returns), so the name stays until it closes.
   const download = () => {
     const title = document.title;
     document.title = fileName;
+    const restore = () => {
+      document.title = title;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
     window.print();
-    document.title = title;
   };
 
   /** Saves the server PDF through a short-lived link, so the server names the file. */
