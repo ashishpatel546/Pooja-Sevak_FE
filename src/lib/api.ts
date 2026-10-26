@@ -151,3 +151,25 @@ export async function api<T = unknown>(path: string, opts: ApiOptions = {}): Pro
   }
   return payload as T;
 }
+
+/** A binary response such as a PDF, or null when the server can't provide it (any failure). */
+export async function apiBlob(path: string, opts: Pick<ApiOptions, 'token' | 'query'> = {}): Promise<Blob | null> {
+  const url = new URL(apiBase() + path, window.location.origin);
+  Object.entries(opts.query ?? {}).forEach(([k, v]) => {
+    if (v !== undefined) url.searchParams.set(k, String(v));
+  });
+  try {
+    const res = await fetch(url.toString(), {
+      headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
+      credentials: 'include',
+    });
+    return res.ok ? await res.blob() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Absolute URL of an API path, for links the browser opens itself (e.g. a file download). */
+export function apiUrl(path: string): string {
+  return new URL(apiBase() + path, window.location.origin).toString();
+}

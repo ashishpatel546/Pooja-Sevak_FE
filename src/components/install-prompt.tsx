@@ -69,7 +69,7 @@ export function InstallPrompt() {
   if (!deferredEvent && !isIos) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 p-4 sm:flex sm:justify-center">
+    <div className="fixed inset-x-0 bottom-0 z-30 p-4 sm:flex sm:justify-center print:hidden">
       <Card className="w-full sm:max-w-md">
         <CardContent className="flex items-start gap-3">
           <Diya className="size-9" />

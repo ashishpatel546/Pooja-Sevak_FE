@@ -103,6 +103,9 @@ const booking: Record<keyof typeof en, string> = {
   'kul.saveOnce': 'अपने परिवार का विवरण एक बार सहेज लें',
   'kul.saveOnceHint': '— गोत्र और नाम — फिर हर संकल्प अपने आप भर जाएगा।',
 
+  'kundali.label': 'पंडित जी के साथ कुंडली साझा करें',
+  'kundali.none': 'कुंडली साझा न करें',
+  'kundali.hint': 'पंडित जी पूजा या परामर्श से पहले इसे पढ़ सकेंगे। केवल वही कुंडलियाँ दिखती हैं जो आपने खोली हैं।',
   'notes.label': 'पंडित जी के लिए टिप्पणी',
   'notes.optional': '(वैकल्पिक)',
   'notes.placeholder': 'पार्किंग, मंज़िल, आपके पास पहले से रखी सामग्री, कुछ भी जो पंडित जी को पता होना चाहिए',
@@ -171,6 +174,8 @@ const booking: Record<keyof typeof en, string> = {
   'detail.duration': 'अवधि',
   'detail.durationValue': 'लगभग {duration} · {mode}',
   'detail.pandit': 'पंडित जी',
+  'detail.kundali': 'साझा की गई कुंडली',
+  'detail.kundaliOpen': 'साझा की गई कुंडली खोलें',
   'detail.notes': 'आपकी टिप्पणी',
   'detail.sankalp': 'संकल्प',
   'detail.devotee': 'भक्त',
