@@ -120,7 +120,7 @@ const kundali: Record<keyof typeof en, string> = {
   'report.back': 'सभी कुंडलियाँ',
   'report.language': 'कुंडली की भाषा',
   'report.print': 'PDF डाउनलोड करें',
-  'report.printHint': 'पूरी कुंडली A4 PDF के रूप में सेव होती है।',
+  'report.printHint': 'प्रिंट विंडो में “Save as PDF” चुनें।',
   'cover.brand': 'पूजा सेवक',
   'cover.footerNote': 'हर पूजा के लिए सत्यापित पंडित जी',
   'cover.lagna': 'लग्न',

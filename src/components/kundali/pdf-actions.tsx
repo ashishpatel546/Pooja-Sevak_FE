@@ -3,29 +3,18 @@
 import { useState } from 'react';
 import { Download, Loader2, Share2 } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
-import { apiBlob } from '@/lib/api';
+import { api, apiBlob, apiUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import type { ChartStyle } from './kundali-chart';
 import type { ReportT } from './report-kit';
 
 const SITE = 'https://www.pujasevak.in/kundali';
 
-function save(file: File) {
-  const url = URL.createObjectURL(file);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-}
-
 /**
- * "Download PDF" fetches the PDF made on the server (same on every phone) and falls back to
- * the browser's print dialog when the server can't make one. "Send on WhatsApp" prepares the
- * same file, then hands it to the phone's share sheet; a second tap is needed because phones
- * only open the share sheet straight from a tap.
+ * "Download PDF" is the browser's own print to PDF (no load on the server), the file named
+ * after the report through the page title. "Send on WhatsApp" needs a real file, so it asks
+ * the server for the PDF and hands it to the phone's share sheet; a second tap is needed
+ * because phones only open the share sheet straight from a tap.
  */
 export function PdfActions({
   reportId,
@@ -42,7 +31,7 @@ export function PdfActions({
   fileName: string;
   t: ReportT;
 }) {
-  const [busy, setBusy] = useState<'download' | 'share' | null>(null);
+  const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState<File | null>(null);
 
   const fetchPdf = async (): Promise<File | null> => {
@@ -51,12 +40,21 @@ export function PdfActions({
     return blob && new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
   };
 
-  const download = async () => {
-    setBusy('download');
-    const file = await fetchPdf();
-    setBusy(null);
-    if (file) save(file);
-    else window.print();
+  const download = () => {
+    const title = document.title;
+    document.title = fileName;
+    window.print();
+    document.title = title;
+  };
+
+  /** Saves the server PDF through a short-lived link, so the server names the file. */
+  const saveFromServer = async () => {
+    const link = await api<{ path: string }>(`/kundali/reports/${reportId}/pdf-link`, {
+      method: 'POST',
+      token,
+      query: { lang, style },
+    });
+    window.location.assign(apiUrl(link.path));
   };
 
   const text = t('share.text', { title: fileName, url: SITE });
@@ -70,30 +68,38 @@ export function PdfActions({
   };
   const share = async () => {
     if (ready) return send(ready);
-    setBusy('share');
-    const file = await fetchPdf();
-    setBusy(null);
-    if (file && navigator.canShare?.({ files: [file] })) {
-      setReady(file);
+    setBusy(true);
+    // Phones can hand a PDF to WhatsApp through the share sheet.
+    const probe = new File([''], 'x.pdf', { type: 'application/pdf' });
+    if (navigator.canShare?.({ files: [probe] })) {
+      const file = await fetchPdf();
+      setBusy(false);
+      if (file) setReady(file);
+      else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
       return;
     }
-    // Computers can't hand a file to WhatsApp: save it and open WhatsApp to attach it there.
-    if (file) save(file);
-    window.open(`https://wa.me/?text=${encodeURIComponent(t('share.attach', { title: fileName, url: SITE }))}`, '_blank', 'noopener');
+    // Computers can't: save the PDF, then open WhatsApp to attach it there.
+    const saved = await saveFromServer().then(
+      () => true,
+      () => false,
+    );
+    setBusy(false);
+    const message = saved ? t('share.attach', { title: fileName, url: SITE }) : text;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
   };
 
   return (
     <>
-      <Button size="lg" variant="outline" onClick={() => void share()} disabled={busy !== null} aria-describedby="share-hint">
-        {busy === 'share' ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Share2 aria-hidden="true" />}
-        {busy === 'share' ? t('share.preparing') : ready ? t('share.send') : t('share.button')}
+      <Button size="lg" variant="outline" onClick={() => void share()} disabled={busy} aria-describedby="share-hint">
+        {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Share2 aria-hidden="true" />}
+        {busy ? t('share.preparing') : ready ? t('share.send') : t('share.button')}
       </Button>
       <p id="share-hint" className="sr-only">
         {t('share.hint')}
       </p>
-      <Button size="lg" className="sm:ml-auto" onClick={() => void download()} disabled={busy !== null} aria-describedby="print-hint">
-        {busy === 'download' ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Download aria-hidden="true" />}
-        {busy === 'download' ? t('share.preparing') : t('report.print')}
+      <Button size="lg" className="sm:ml-auto" onClick={download} aria-describedby="print-hint">
+        <Download aria-hidden="true" />
+        {t('report.print')}
       </Button>
     </>
   );

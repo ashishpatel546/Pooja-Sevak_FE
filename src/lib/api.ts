@@ -168,3 +168,8 @@ export async function apiBlob(path: string, opts: Pick<ApiOptions, 'token' | 'qu
     return null;
   }
 }
+
+/** Absolute URL of an API path, for links the browser opens itself (e.g. a file download). */
+export function apiUrl(path: string): string {
+  return new URL(apiBase() + path, window.location.origin).toString();
+}

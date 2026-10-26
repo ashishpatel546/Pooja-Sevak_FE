@@ -121,7 +121,7 @@ const kundali = {
   'report.back': 'All kundalis',
   'report.language': 'Report language',
   'report.print': 'Download PDF',
-  'report.printHint': 'Saves the whole kundali as an A4 PDF.',
+  'report.printHint': 'Choose “Save as PDF” in the print window.',
   'cover.brand': 'Pooja Sevak',
   'cover.footerNote': 'Verified pandits for every puja',
   'cover.lagna': 'Lagna',
