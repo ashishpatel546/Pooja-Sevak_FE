@@ -119,6 +119,10 @@ const kundali = {
   'report.retry': 'Try again',
 
   'birth.title': 'Birth details',
+  'birth.name': 'Name',
+  'birth.nameNewborn': 'Newborn baby (name not chosen yet)',
+  'birth.nameNewbornWith': '{name} (newborn, naamkaran not yet done)',
+  'birth.gender': 'Gender',
   'birth.date': 'Date of birth',
   'birth.time': 'Time of birth',
   'birth.place': 'Place of birth',

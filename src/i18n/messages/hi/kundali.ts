@@ -118,6 +118,10 @@ const kundali: Record<keyof typeof en, string> = {
   'report.retry': 'फिर से कोशिश करें',
 
   'birth.title': 'जन्म विवरण',
+  'birth.name': 'नाम',
+  'birth.nameNewborn': 'नवजात शिशु (नामकरण अभी नहीं हुआ)',
+  'birth.nameNewbornWith': '{name} (नवजात, नामकरण अभी नहीं हुआ)',
+  'birth.gender': 'लिंग',
   'birth.date': 'जन्म तिथि',
   'birth.time': 'जन्म समय',
   'birth.place': 'जन्म स्थान',

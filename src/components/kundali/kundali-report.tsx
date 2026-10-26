@@ -46,7 +46,7 @@ type Ctx = {
 
 /**
  * The full janam kundali. On screen one section shows at a time (chosen from the tabs);
- * the printed PDF carries every section, each starting on a new page.
+ * the printed PDF carries every section, one after another.
  */
 export function KundaliReportBody({
   k,
@@ -138,7 +138,7 @@ export function KundaliReportBody({
         <p className="text-sm text-muted-foreground">{t('section.printAll')}</p>
       </div>
 
-      {SECTIONS.map((s, i) => (
+      {SECTIONS.map((s) => (
         <div
           key={s}
           id={`${id}-panel-${s}`}
@@ -148,7 +148,6 @@ export function KundaliReportBody({
           className={cn(
             'min-w-0 grid-cols-1 gap-6 print:block print:space-y-6',
             section === s ? 'grid' : 'hidden',
-            i > 0 && 'print:break-before-page',
           )}
         >
           {panels[s]}
@@ -169,6 +168,15 @@ function BasicPanel({ k, person, lang, t, n }: Ctx) {
       <ReportSection title={t('birth.title')}>
         <Facts
           rows={[
+            [
+              t('birth.name'),
+              person.name
+                ? person.newborn
+                  ? t('birth.nameNewbornWith', { name: person.name })
+                  : person.name
+                : t('birth.nameNewborn'),
+            ],
+            [t('birth.gender'), t(`gender.${person.gender}`)],
             [t('birth.date'), fmtCivilDate(person.date, lang)],
             [t('birth.time'), fmtWallTime(person.time, lang)],
             [t('birth.place'), person.place.label],
@@ -597,7 +605,7 @@ function DashaPanel({ k, lang, t, n, now, grahaName }: Ctx) {
         )}
       </ReportSection>
 
-      <ReportSection title={t('dasha.periodsTitle')} long>
+      <ReportSection title={t('dasha.periodsTitle')}>
         <p className="mb-3 hidden text-sm text-muted-foreground print:block">{t('dasha.printNote')}</p>
         <ol className="grid gap-2">
           {k.dasha.mahadashas.map((m) => {

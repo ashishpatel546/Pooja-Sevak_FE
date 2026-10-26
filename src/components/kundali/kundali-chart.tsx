@@ -84,7 +84,7 @@ export function KundaliChart({
   const line = 'fill-none stroke-diya/80 [stroke-width:1.25]';
 
   return (
-    <figure className={cn('mx-auto w-full max-w-[22rem]', className)}>
+    <figure className={cn('mx-auto w-full max-w-[22rem] print:break-inside-avoid', className)}>
       <svg viewBox="-2 -2 304 304" role="img" aria-label={ariaLabel} className="h-auto w-full font-sans">
         <rect x="0" y="0" width="300" height="300" rx="6" className="fill-card stroke-diya [stroke-width:1.5]" />
         {style === 'north' ? (

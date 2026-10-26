@@ -94,29 +94,22 @@ export function utcOffset(minutes: number): string {
   return `UTC${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/** A titled report section; small ones avoid breaking across printed pages. */
-export function ReportSection({
-  title,
-  children,
-  className,
-  long = false,
-}: {
-  title: string;
-  children: ReactNode;
-  className?: string;
-  /** Long sections (dasha tables) may break across pages. */
-  long?: boolean;
-}) {
+/**
+ * A titled report section. In print it flows on from the previous one and may continue onto
+ * the next page; only its heading, table rows, facts and charts are kept whole.
+ */
+export function ReportSection({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
     <section
       className={cn(
-        'rounded-2xl border bg-card p-5 sm:p-6 print:rounded-none print:border-0 print:p-0',
-        !long && 'print:break-inside-avoid',
+        'rounded-2xl border bg-card p-5 sm:p-6 print:rounded-none print:border-0 print:p-0 print:[&_tr]:break-inside-avoid',
         className,
       )}
     >
-      <h2 className="font-heading text-2xl leading-snug text-heading">{title}</h2>
-      <div aria-hidden="true" className="toran mt-2 mb-4" />
+      <div className="print:break-inside-avoid print:break-after-avoid">
+        <h2 className="font-heading text-2xl leading-snug text-heading">{title}</h2>
+        <div aria-hidden="true" className="toran mt-2 mb-4" />
+      </div>
       {children}
     </section>
   );
@@ -127,7 +120,7 @@ export function Facts({ rows }: { rows: [string, ReactNode][] }) {
   return (
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
       {rows.map(([k, v]) => (
-        <div key={k} className="flex min-w-0 flex-col border-b border-border/60 pb-2">
+        <div key={k} className="flex min-w-0 flex-col border-b border-border/60 pb-2 print:break-inside-avoid">
           <dt className="text-sm text-muted-foreground">{k}</dt>
           <dd className="font-medium break-words">{v}</dd>
         </div>
