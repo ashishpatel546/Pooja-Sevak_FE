@@ -103,11 +103,16 @@ export function ReportSection({ title, children, className }: { title: string; c
     <section
       className={cn(
         'rounded-2xl border bg-card p-5 sm:p-6 print:rounded-none print:border-0 print:p-0 print:[&_tr]:break-inside-avoid',
+        // On paper: tinted table headings and softly banded rows, as in a printed patri
+        'print:[&_tbody_tr:nth-child(even)]:bg-[#fffaf3] print:[&_thead_tr]:bg-[#fcebd3]',
         className,
       )}
     >
       <div className="print:break-inside-avoid print:break-after-avoid">
-        <h2 className="font-heading text-2xl leading-snug text-heading">{title}</h2>
+        <h2 className="flex items-center gap-3 font-heading text-2xl leading-snug text-heading print:border-l-[3pt] print:border-kumkum print:bg-[#fcebd3] print:px-3 print:py-1.5 print:text-[17pt]">
+          <span aria-hidden="true" className="size-2.5 shrink-0 rotate-45 border border-diya bg-sindoor" />
+          {title}
+        </h2>
         <div aria-hidden="true" className="toran mt-2 mb-4" />
       </div>
       {children}
@@ -121,7 +126,7 @@ export function Facts({ rows }: { rows: [string, ReactNode][] }) {
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
       {rows.map(([k, v]) => (
         <div key={k} className="flex min-w-0 flex-col border-b border-border/60 pb-2 print:break-inside-avoid">
-          <dt className="text-sm text-muted-foreground">{k}</dt>
+          <dt className="text-sm text-muted-foreground print:text-accent-foreground">{k}</dt>
           <dd className="font-medium break-words">{v}</dd>
         </div>
       ))}

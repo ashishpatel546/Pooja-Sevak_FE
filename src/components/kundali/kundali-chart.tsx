@@ -23,6 +23,22 @@ const NORTH_HOUSES: { poly: Pt[]; at: Pt; num: Pt }[] = [
   { poly: [[300, 0], [225, 75], [150, 0]], at: [225, 24], num: [225, 62] },
 ];
 
+/**
+ * Each graha in its traditional colour: Surya copper, Chandra silver, Mangal red, Budh green,
+ * Guru yellow, Shukra pink, Shani blue, Rahu smoke, Ketu brown. All pass 4.5:1 on the card.
+ */
+const GRAHA_FILL: Record<string, string> = {
+  su: 'fill-[#c2410c] dark:fill-[#fb923c]',
+  mo: 'fill-[#4b5e7a] dark:fill-[#cbd5e1]',
+  ma: 'fill-[#b91c1c] dark:fill-[#f87171]',
+  me: 'fill-[#15803d] dark:fill-[#4ade80]',
+  ju: 'fill-[#a16207] dark:fill-[#facc15]',
+  ve: 'fill-[#be185d] dark:fill-[#f9a8d4]',
+  sa: 'fill-[#1d4ed8] dark:fill-[#93c5fd]',
+  ra: 'fill-[#57534e] dark:fill-[#d6d3d1]',
+  ke: 'fill-[#78350f] dark:fill-[#e0a872]',
+};
+
 // ── South Indian: fixed signs in a 4×4 ring, Meena top-left, running clockwise.
 const SOUTH_CELL: Pt[] = [
   [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1], [0, 0],
@@ -50,7 +66,7 @@ function Labels({ x, y, labels, perRow, lagnaKey }: { x: number; y: number; labe
             <tspan
               key={p.key}
               dx={i === 0 ? 0 : 4}
-              className={cn(p.key === lagnaKey ? 'fill-sindoor font-semibold' : 'fill-foreground')}
+              className={cn(p.key === lagnaKey ? 'fill-heading font-semibold' : (GRAHA_FILL[p.key] ?? 'fill-foreground'))}
             >
               {p.label}
             </tspan>
