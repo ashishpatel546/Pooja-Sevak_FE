@@ -288,7 +288,14 @@ export default function KundaliReportPage() {
             <MilanReportBody m={milan.m} boy={milan.boy} girl={milan.girl} lang={reportLang} t={t} chartStyle={chartStyle} />
           ) : (
             !isMilan(r.result) && (
-              <KundaliReportBody k={r.result} person={person!} lang={reportLang} t={t} chartStyle={chartStyle} />
+              <KundaliReportBody
+                k={r.result}
+                person={person!}
+                lang={reportLang}
+                t={t}
+                chartStyle={chartStyle}
+                gochar={r.gochar}
+              />
             )
           )}
 

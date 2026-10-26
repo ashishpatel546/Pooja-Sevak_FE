@@ -105,6 +105,30 @@ export type ShaniPeriod = {
   phases: { phase: 'rising' | 'peak' | 'setting'; start: string; end: string }[];
 };
 
+export type CompoundRelation = 'great_friend' | 'friend' | 'neutral' | 'enemy' | 'great_enemy';
+export type BaladiAvastha = 'bala' | 'kumara' | 'yuva' | 'vriddha' | 'mrita';
+export type GrahaStrength = {
+  graha: GrahaKey;
+  moolatrikona: boolean;
+  vargottama: boolean;
+  relation: CompoundRelation | null;
+  dig_bala: number;
+  avastha: BaladiAvastha;
+};
+
+export type Gochar = {
+  at: string;
+  grahas: {
+    graha: GrahaKey;
+    sign: number;
+    degree: number;
+    retrograde: boolean;
+    house_from_lagna: number;
+    house_from_moon: number;
+    favourable: boolean;
+  }[];
+};
+
 export type Kundali = {
   birth: {
     instant: string;
@@ -165,6 +189,8 @@ export type Kundali = {
   yogas: Yoga[];
   shubh: Shubh;
   shani: ShaniPeriod[];
+  /** Absent on reports computed before graha strength was added. */
+  strength?: GrahaStrength[];
 };
 
 export type KootaKey = 'varna' | 'vashya' | 'tara' | 'yoni' | 'graha_maitri' | 'gana' | 'bhakoot' | 'nadi';
@@ -210,7 +236,7 @@ export type KundaliReportSummary = {
   input: KundaliInput;
 };
 
-export type KundaliReportView = KundaliReportSummary & { result: Kundali | MilanReport };
+export type KundaliReportView = KundaliReportSummary & { result: Kundali | MilanReport; gochar?: Gochar | null };
 
 export type KindQuota = { used: number; limit: number | null; remaining: number | null };
 export type KundaliQuota = { unlimited: boolean; resets_on: string; kundali: KindQuota; milan: KindQuota };

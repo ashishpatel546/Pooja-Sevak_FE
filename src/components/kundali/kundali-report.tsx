@@ -4,7 +4,7 @@ import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'rea
 import Link from 'next/link';
 import { CircleAlert, Flower2, HandHeart, ShieldCheck, Sparkles } from 'lucide-react';
 import { INTL_LOCALE, type Locale } from '@/i18n/config';
-import { displayName, dms, pickName, type BirthDetails, type DashaPeriod, type GrahaKey, type Kundali, type VargaKey } from '@/lib/kundali';
+import { displayName, dms, pickName, type BirthDetails, type DashaPeriod, type Gochar, type GrahaKey, type Kundali, type VargaKey } from '@/lib/kundali';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNow } from '@/components/customer/use-api';
@@ -26,7 +26,7 @@ import {
 
 const CHARTS: ChartKind[] = ['lagna', 'navamsa', 'chandra'];
 const VARGAS: VargaKey[] = ['d2', 'd3', 'd7', 'd10', 'd12'];
-const SECTIONS = ['basic', 'charts', 'grahas', 'bhavas', 'doshas', 'yogas', 'dasha', 'shani', 'shubh'] as const;
+const SECTIONS = ['basic', 'charts', 'grahas', 'bhavas', 'doshas', 'yogas', 'dasha', 'gochar', 'shani', 'shubh'] as const;
 type Section = (typeof SECTIONS)[number];
 
 const within = (p: { start: string; end: string }, now: number) => Date.parse(p.start) <= now && now < Date.parse(p.end);
@@ -37,6 +37,7 @@ type Ctx = {
   lang: Locale;
   t: ReportT;
   chartStyle: ChartStyle;
+  gochar: Gochar | null;
   now: number;
   n: (b: { en: string; hi: string }) => string;
   grahaName: (key: GrahaKey) => string;
@@ -54,12 +55,15 @@ export function KundaliReportBody({
   lang,
   t,
   chartStyle,
+  gochar = null,
 }: {
   k: Kundali;
   person: BirthDetails;
   lang: Locale;
   t: ReportT;
   chartStyle: ChartStyle;
+  /** Today's transits; only on a person's own kundali, not inside a milan. */
+  gochar?: Gochar | null;
 }) {
   const id = useId();
   const [section, setSection] = useState<Section>('basic');
@@ -74,6 +78,7 @@ export function KundaliReportBody({
     lang,
     t,
     chartStyle,
+    gochar,
     now,
     n,
     grahaName,
@@ -81,14 +86,15 @@ export function KundaliReportBody({
     ord: (h) => t(`ordinal.${h}` as Parameters<ReportT>[0]),
   };
 
+  const sections = SECTIONS.filter((s) => s !== 'gochar' || gochar);
   const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    const i = SECTIONS.indexOf(section);
+    const i = sections.indexOf(section);
     const j =
-      e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? SECTIONS.length - 1 : null;
+      e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? sections.length - 1 : null;
     if (j === null) return;
     e.preventDefault();
-    const next = (j + SECTIONS.length) % SECTIONS.length;
-    setSection(SECTIONS[next]);
+    const next = (j + sections.length) % sections.length;
+    setSection(sections[next]);
     tabs.current[next]?.focus();
   };
 
@@ -100,6 +106,7 @@ export function KundaliReportBody({
     doshas: <DoshasPanel {...ctx} />,
     yogas: <YogasPanel {...ctx} />,
     dasha: <DashaPanel {...ctx} />,
+    gochar: <GocharPanel {...ctx} />,
     shani: <ShaniPanel {...ctx} />,
     shubh: <ShubhPanel {...ctx} />,
   };
@@ -113,7 +120,7 @@ export function KundaliReportBody({
           onKeyDown={onTabKey}
           className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]"
         >
-          {SECTIONS.map((s, i) => (
+          {sections.map((s, i) => (
             <button
               key={s}
               ref={(el) => {
@@ -138,7 +145,7 @@ export function KundaliReportBody({
         <p className="text-sm text-muted-foreground">{t('section.printAll')}</p>
       </div>
 
-      {SECTIONS.map((s) => (
+      {sections.map((s) => (
         <div
           key={s}
           id={`${id}-panel-${s}`}
@@ -371,6 +378,8 @@ function GrahasPanel({ k, t, n }: Ctx) {
         </div>
       </ReportSection>
 
+      {k.strength && <StrengthSection k={k} t={t} n={n} />}
+
       <ReportSection title={t('grahas.karakaTitle')}>
         <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
           {k.grahas.map((g) => (
@@ -382,6 +391,109 @@ function GrahasPanel({ k, t, n }: Ctx) {
         </dl>
       </ReportSection>
     </>
+  );
+}
+
+/** Classical strength factors, each as the texts state it (no combined score). */
+function StrengthSection({ k, t, n }: Pick<Ctx, 'k' | 't' | 'n'>) {
+  const graha = (key: GrahaKey) => k.grahas.find((g) => g.key === key)!;
+  return (
+    <ReportSection title={t('strength.title')}>
+      <p className="mb-3 text-sm text-muted-foreground">{t('strength.about')}</p>
+      <div className="-mx-2 overflow-x-auto px-2">
+        <table className="w-full min-w-[36rem] text-left text-sm sm:text-base">
+          <thead className="text-sm text-muted-foreground">
+            <tr className="border-b">
+              <th scope="col" className="py-2 pr-3 font-medium">{t('grahas.graha')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('strength.relation')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('strength.dig')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('strength.avastha')}</th>
+              <th scope="col" className="py-2 font-medium">{t('strength.special')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {k.strength!.map((s) => {
+              const g = graha(s.graha);
+              const special = [
+                g.dignity === 'exalted' || g.dignity === 'own' ? n(g.dignity_name!) : null,
+                s.moolatrikona ? t('strength.mt') : null,
+                s.vargottama ? t('strength.vargottama') : null,
+              ].filter(Boolean);
+              return (
+                <tr key={s.graha} className="border-b border-border/60 align-top">
+                  <th scope="row" className="py-2 pr-3 font-medium">{n(g.name)}</th>
+                  <td className="py-2 pr-3">{s.relation ? t(`relation.${s.relation}`) : '—'}</td>
+                  <td className="py-2 pr-3">
+                    <span className="flex items-center gap-2">
+                      <span aria-hidden="true" className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
+                        <span className="block h-full rounded-full bg-tulsi" style={{ width: `${s.dig_bala}%` }} />
+                      </span>
+                      <span className="tabular-nums">{s.dig_bala}%</span>
+                    </span>
+                  </td>
+                  <td className="py-2 pr-3">{t(`avastha.${s.avastha}`)}</td>
+                  <td className="py-2 text-muted-foreground">{special.join(', ') || '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <dl className="mt-4 grid gap-2 text-sm">
+        {(['relation', 'dig', 'avastha', 'mt', 'vargottama'] as const).map((key) => (
+          <div key={key}>
+            <dt className="inline font-medium">{t(`strength.${key}`)}: </dt>
+            <dd className="inline text-muted-foreground">{t(`strengthKey.${key}`)}</dd>
+          </div>
+        ))}
+      </dl>
+    </ReportSection>
+  );
+}
+
+// ── Gochar ─────────────────────────────────────────────────────────────────
+
+function GocharPanel({ k, lang, t, gochar, grahaName, ord }: Ctx) {
+  if (!gochar) return null;
+  const moon = k.grahas.find((g) => g.key === 'mo')!;
+  return (
+    <ReportSection title={t('gochar.title')}>
+      <p className="mb-3 text-sm text-muted-foreground">
+        {t('gochar.about', { date: fmtDate(gochar.at, lang, k.birth.tz), rashi: RASHI_NAMES[lang][moon.sign] })}
+      </p>
+      <div className="-mx-2 overflow-x-auto px-2">
+        <table className="w-full min-w-[34rem] text-left text-sm sm:text-base">
+          <thead className="text-sm text-muted-foreground">
+            <tr className="border-b">
+              <th scope="col" className="py-2 pr-3 font-medium">{t('grahas.graha')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('grahas.rashi')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('gochar.fromLagna')}</th>
+              <th scope="col" className="py-2 pr-3 font-medium">{t('gochar.fromMoon')}</th>
+              <th scope="col" className="py-2 font-medium">{t('gochar.effect')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {gochar.grahas.map((g) => (
+              <tr key={g.graha} className="border-b border-border/60 align-top">
+                <th scope="row" className="py-2 pr-3 font-medium">
+                  {grahaName(g.graha)}
+                  {g.retrograde && g.graha !== 'ra' && g.graha !== 'ke' && (
+                    <span className="font-normal text-muted-foreground"> ({t('grahas.retro')})</span>
+                  )}
+                </th>
+                <td className="py-2 pr-3">{RASHI_NAMES[lang][g.sign]}</td>
+                <td className="py-2 pr-3">{ord(g.house_from_lagna)}</td>
+                <td className="py-2 pr-3">{ord(g.house_from_moon)}</td>
+                <td className={cn('py-2', g.favourable ? 'text-tulsi' : 'text-muted-foreground')}>
+                  {g.favourable ? t('gochar.good') : t('gochar.testing')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-4 text-sm text-muted-foreground">{t('gochar.note')}</p>
+    </ReportSection>
   );
 }
 
