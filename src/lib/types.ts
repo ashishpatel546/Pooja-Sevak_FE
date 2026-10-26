@@ -290,6 +290,8 @@ export type CreateBookingInput = {
   sankalp?: Sankalp;
   /** 'pandit' books the pandit's samagri kit (at-home only). */
   samagri_by?: SamagriBy;
+  /** One of the family's opened kundali reports, shared with the pandit. */
+  kundali_report_id?: string;
 };
 
 export type Booking = {
@@ -346,6 +348,7 @@ export type Booking = {
   pandit_service?: PanditServiceItem & { service_definition?: ServiceDefinition };
   address?: Address | null;
   review?: Review | null;
+  kundali_report_id?: string | null;
 };
 
 export type PaymentOrder = {

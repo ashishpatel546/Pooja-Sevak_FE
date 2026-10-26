@@ -38,6 +38,7 @@ const pandit: Record<keyof typeof en, string> = {
   'card.sankalp.occasion': 'अवसर',
   'card.sankalp.family': 'परिवार के सदस्य',
   'card.sankalp.empty': 'परिवार ने संकल्प का विवरण नहीं दिया है। पूजा शुरू करने से पहले आप भक्त का नाम और गोत्र पूछ लें।',
+  'card.kundali': 'परिवार की कुंडली देखें',
   'card.note': 'परिवार का संदेश',
   'card.cancelReason': 'रद्द करने का कारण: {reason}',
   'card.unpaid': 'परिवार ने अभी भुगतान पूरा नहीं किया है।',

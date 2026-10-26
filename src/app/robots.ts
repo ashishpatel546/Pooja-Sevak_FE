@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         '/dashboard',
         '/bookings',
         '/reminders',
+        '/kundali/',
         '/addresses',
         '/login',
         '/signup',

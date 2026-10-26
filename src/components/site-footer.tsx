@@ -6,7 +6,7 @@ import { LanguageLinks } from '@/components/seo/language-links';
 export async function SiteFooter() {
   const t = await getT('nav');
   return (
-    <footer className="sandhya relative mt-16 overflow-hidden">
+    <footer className="sandhya relative mt-16 overflow-hidden print:hidden">
       <div className="toran" aria-hidden="true" />
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-4 py-12 sm:px-6 sm:grid-cols-3 lg:grid-cols-[1.4fr_repeat(5,minmax(0,1fr))]">
         <div className="col-span-2 max-w-sm sm:col-span-3 lg:col-span-1">
@@ -24,6 +24,8 @@ export async function SiteFooter() {
             ['/browse', t('footer.pandits')],
             ['/online', t('footer.online')],
             ['/panchang', t('footer.panchang')],
+            ['/kundali', t('footer.kundali')],
+            ['/muhurat', t('footer.muhurat')],
           ]}
         />
         <FooterCol

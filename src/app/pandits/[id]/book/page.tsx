@@ -57,6 +57,8 @@ import { DateStrip, SlotGrid, type DateMark } from '@/components/customer/slot-p
 import { StepIndicator } from '@/components/customer/step-indicator';
 import { formatLocalTime, TimezoneNote, useForeignTimeZone } from '@/components/customer/timezone-note';
 import { useApiQuery } from '@/components/customer/use-api';
+import { selectClass } from '@/components/kundali/birth-fields';
+import { readAttachedKundali, setAttachedKundali, type KundaliReportSummary } from '@/lib/kundali';
 import { FeeLines, hasExtras } from '@/components/customer/price-breakdown';
 import { SamagriListButton, samagriForMode } from '@/components/common/samagri-list';
 import { samagriKitPriceFor } from '@/lib/samagri';
@@ -208,6 +210,8 @@ function Wizard({
     return carried.occasion && !draft.occasion.trim() ? { ...draft, occasion: typeName(carried.occasion) } : draft;
   });
   const [notes, setNotes] = useState('');
+  // A kundali chosen with "Ask a pandit ji" on a report arrives preselected.
+  const [kundaliId, setKundaliId] = useState<string>(() => readAttachedKundali() ?? '');
   const [stepError, setStepError] = useState<string | null>(null);
 
   // Bookings need a verified email + mobile; the check happens inline on the review step.
@@ -239,6 +243,9 @@ function Wizard({
   });
   const addresses = useApiQuery<Address[]>('/addresses', { token });
   const family = useApiQuery<FamilyProfile>('/users/me/family-profile', { token });
+  const kundalis = useApiQuery<KundaliReportSummary[]>('/kundali/reports', { token });
+  // Only opened reports can be shared (an unopened one hasn't used the family's quota).
+  const shareable = (kundalis.data ?? []).filter((r) => r.delivered_at);
   // Sacred days across the visible dates, fetched once.
   const panchang = useApiQuery<Observance[]>('/panchang/upcoming', { query: { from: dates[0], days: dates.length } });
   const marks = useMemo(() => {
@@ -351,11 +358,13 @@ function Wizard({
         ...(wantKit ? { samagri_by: 'pandit' as const } : {}),
         ...(notes.trim() ? { customer_notes: notes.trim() } : {}),
         ...(buildSankalp() ? { sankalp: buildSankalp() } : {}),
+        ...(kundaliId && shareable.some((r) => r.id === kundaliId) ? { kundali_report_id: kundaliId } : {}),
       };
       setSubmitting(true);
       try {
         booking = await api<Booking>('/bookings', { method: 'POST', token, body });
         setCreated(booking);
+        setAttachedKundali(null);
         // The fee rule changed (or never loaded): show the real total before paying.
         if (customerPayable(booking) !== payable) {
           setSubmitting(false);
@@ -767,6 +776,31 @@ function Wizard({
                   placeholder={t('notes.placeholder')}
                 />
               </section>
+
+              {shareable.length > 0 && (
+                <section aria-labelledby="kundali-h">
+                  <Label htmlFor="booking-kundali" id="kundali-h" className="text-base">
+                    {t('kundali.label')} <span className="font-normal text-muted-foreground">{t('notes.optional')}</span>
+                  </Label>
+                  <select
+                    id="booking-kundali"
+                    className={`${selectClass} mt-2`}
+                    value={kundaliId}
+                    onChange={(e) => setKundaliId(e.target.value)}
+                    aria-describedby="booking-kundali-hint"
+                  >
+                    <option value="">{t('kundali.none')}</option>
+                    {shareable.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="booking-kundali-hint" className="mt-1.5 text-sm text-muted-foreground">
+                    {t('kundali.hint')}
+                  </p>
+                </section>
+              )}
             </div>
           )}
 

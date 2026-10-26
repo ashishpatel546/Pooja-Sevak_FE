@@ -102,6 +102,9 @@ const booking = {
   'kul.saveOnce': 'Save your family details once',
   'kul.saveOnceHint': '— gotra and names — and every sankalp fills itself.',
 
+  'kundali.label': 'Share a kundali with pandit-ji',
+  'kundali.none': 'Don’t share a kundali',
+  'kundali.hint': 'Pandit-ji can read it before the puja or consultation. Only kundalis you have opened are listed.',
   'notes.label': 'Notes for pandit-ji',
   'notes.optional': '(optional)',
   'notes.placeholder': 'Parking, floor, samagri you already have, anything pandit-ji should know',
@@ -170,6 +173,8 @@ const booking = {
   'detail.duration': 'Duration',
   'detail.durationValue': 'About {duration} · {mode}',
   'detail.pandit': 'Pandit',
+  'detail.kundali': 'Kundali shared',
+  'detail.kundaliOpen': 'Open the kundali you shared',
   'detail.notes': 'Your notes',
   'detail.sankalp': 'Sankalp',
   'detail.devotee': 'Devotee',
