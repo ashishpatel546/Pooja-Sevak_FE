@@ -185,7 +185,9 @@ export default function KundaliReportPage() {
           <p className="mt-2 font-heading text-2xl text-[#fbe3b6]">
             {milan
               ? t('report.milanOf', { boy: milan.boy.name, girl: milan.girl.name })
-              : t('report.of', { name: person!.name })}
+              : person!.name
+                ? t('report.of', { name: person!.name })
+                : t('report.ofNewborn')}
           </p>
           <div aria-hidden="true" className="toran mx-auto mt-4 max-w-xs" />
           <p className="mt-3 text-sm">

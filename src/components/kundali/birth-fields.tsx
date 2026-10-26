@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export type BirthDraft = {
+  newborn: boolean;
   name: string;
   gender: Gender | '';
   date: string;
@@ -19,7 +20,7 @@ export type BirthDraft = {
   place: { label: string; lat: number; lng: number; tz: string } | null;
 };
 
-export const EMPTY_BIRTH: BirthDraft = { name: '', gender: '', date: '', time: '', place: null };
+export const EMPTY_BIRTH: BirthDraft = { newborn: false, name: '', gender: '', date: '', time: '', place: null };
 
 type PlaceResult = { label: string; detail: string | null; lat: number; lng: number };
 
@@ -158,12 +159,15 @@ export function BirthFields({
   legend,
   showErrors,
   maxDate,
+  allowNewborn = false,
 }: {
   value: BirthDraft;
   onChange: (v: BirthDraft) => void;
   legend?: string;
   showErrors: boolean;
   maxDate: string;
+  /** Offer "newborn, not named yet" (janam kundali only; milan needs both names). */
+  allowNewborn?: boolean;
 }) {
   const t = useT('kundali');
   const id = useId();
@@ -173,18 +177,35 @@ export function BirthFields({
   return (
     <fieldset className="grid min-w-0 gap-4">
       {legend && <legend className="mb-1 font-heading text-xl text-heading">{legend}</legend>}
+      {allowNewborn && (
+        <label className="flex cursor-pointer gap-3 rounded-xl border bg-accent/30 px-4 py-3 has-checked:border-primary has-checked:bg-accent/60 has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
+          <input
+            type="checkbox"
+            checked={value.newborn}
+            onChange={(e) => set('newborn', e.target.checked)}
+            className="mt-1 size-5 shrink-0 accent-primary"
+            aria-describedby={`${id}-newborn-hint`}
+          />
+          <span className="grid gap-0.5">
+            <span className="font-medium">{t('form.newborn')}</span>
+            <span id={`${id}-newborn-hint`} className="text-sm text-muted-foreground">
+              {t('form.newbornHint')}
+            </span>
+          </span>
+        </label>
+      )}
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         <div className="grid content-start gap-1.5">
-          <Label htmlFor={`${id}-name`}>{t('form.name')}</Label>
+          <Label htmlFor={`${id}-name`}>{value.newborn ? t('form.nameOptional') : t('form.name')}</Label>
           <Input
             id={`${id}-name`}
             value={value.name}
             onChange={(e) => set('name', e.target.value)}
-            placeholder={t('form.namePlaceholder')}
+            placeholder={value.newborn ? t('form.newbornNamePlaceholder') : t('form.namePlaceholder')}
             autoComplete="off"
             maxLength={80}
-            required
-            aria-invalid={missing(value.name.trim()) || undefined}
+            required={!value.newborn}
+            aria-invalid={(!value.newborn && missing(value.name.trim())) || undefined}
             className="h-11 text-base"
           />
         </div>
@@ -256,9 +277,21 @@ export function BirthFields({
 }
 
 export function isComplete(b: BirthDraft): boolean {
-  return !!(b.name.trim() && b.gender && b.date && b.time && b.place);
+  return !!((b.newborn || b.name.trim()) && b.gender && b.date && b.time && b.place);
 }
 
 export function toPayload(b: BirthDraft) {
-  return { name: b.name.trim(), gender: b.gender, date: b.date, time: b.time, place: b.place! };
+  return {
+    name: b.name.trim(),
+    ...(b.newborn && { newborn: true }),
+    gender: b.gender,
+    date: b.date,
+    time: b.time,
+    place: b.place!,
+  };
+}
+
+/** The person's name, or a gentle label for a newborn not yet named. */
+export function personName(p: { name: string; newborn?: boolean }, newbornLabel: string): string {
+  return p.name || (p.newborn ? newbornLabel : '');
 }

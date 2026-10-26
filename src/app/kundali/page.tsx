@@ -31,7 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage, useApiQuery } from '@/components/customer/use-api';
-import { BirthFields, EMPTY_BIRTH, isComplete, toPayload, type BirthDraft } from '@/components/kundali/birth-fields';
+import { BirthFields, EMPTY_BIRTH, isComplete, personName, toPayload, type BirthDraft } from '@/components/kundali/birth-fields';
 import { fmtCivilDate, fmtWallTime } from '@/components/kundali/report-kit';
 
 const TABS = ['kundali', 'milan', 'mine'] as const;
@@ -189,7 +189,9 @@ function SavedList({ token }: { token: string }) {
                   {r.kind === 'kundali' ? t('list.kindKundali') : t('list.kindMilan')}
                   {!r.delivered_at && <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs">{t('list.notOpened')}</span>}
                 </p>
-                <p className="font-heading text-xl break-words text-heading">{r.title}</p>
+                <p className="font-heading text-xl break-words text-heading">
+                  {'person' in r.input && !r.input.person.name ? personName(r.input.person, t('newborn.label')) : r.title}
+                </p>
                 {people.map((p) => (
                   <p key={p.name + p.date} className="text-sm text-muted-foreground">
                     {people.length > 1 && `${p.name}: `}
@@ -354,7 +356,7 @@ function KundaliHub() {
                 <h2 className="font-heading text-2xl text-heading">{t('form.kundaliTitle')}</h2>
                 <p className="mt-1 text-muted-foreground">{t('form.kundaliIntro')}</p>
               </div>
-              <BirthFields value={person} onChange={setPerson} showErrors={showErrors} maxDate={maxDate} />
+              <BirthFields value={person} onChange={setPerson} showErrors={showErrors} maxDate={maxDate} allowNewborn />
               {submitBar('kundali')}
             </form>
           </TabsContent>

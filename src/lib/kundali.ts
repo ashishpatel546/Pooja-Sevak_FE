@@ -8,7 +8,8 @@ export type KundaliKind = 'kundali' | 'milan';
 export type Gender = 'male' | 'female' | 'other';
 
 export type BirthDetails = {
-  name: string;
+  name: string; // empty for a newborn not yet named
+  newborn?: boolean;
   gender: Gender;
   date: string;
   time: string;

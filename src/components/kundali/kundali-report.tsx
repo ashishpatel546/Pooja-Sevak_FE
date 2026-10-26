@@ -168,6 +168,7 @@ export function KundaliReportBody({
             <p className="text-sm text-muted-foreground">
               {t('avakahada.namaksharAll', { letters: a.namakshar_all.join(', ') })}
             </p>
+            {person.newborn && <p className="mt-2">{t('newborn.namakshar', { letter: a.namakshar })}</p>}
           </div>
         </ReportSection>
       </div>
