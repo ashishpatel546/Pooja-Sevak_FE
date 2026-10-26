@@ -4,7 +4,7 @@ import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'rea
 import Link from 'next/link';
 import { CircleAlert, Flower2, HandHeart, ShieldCheck, Sparkles } from 'lucide-react';
 import { INTL_LOCALE, type Locale } from '@/i18n/config';
-import { dms, pickName, type BirthDetails, type DashaPeriod, type GrahaKey, type Kundali, type VargaKey } from '@/lib/kundali';
+import { displayName, dms, pickName, type BirthDetails, type DashaPeriod, type GrahaKey, type Kundali, type VargaKey } from '@/lib/kundali';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNow } from '@/components/customer/use-api';
@@ -172,8 +172,8 @@ function BasicPanel({ k, person, lang, t, n }: Ctx) {
               t('birth.name'),
               person.name
                 ? person.newborn
-                  ? t('birth.nameNewbornWith', { name: person.name })
-                  : person.name
+                  ? t('birth.nameNewbornWith', { name: displayName(person, lang) })
+                  : displayName(person, lang)
                 : t('birth.nameNewborn'),
             ],
             [t('birth.gender'), t(`gender.${person.gender}`)],

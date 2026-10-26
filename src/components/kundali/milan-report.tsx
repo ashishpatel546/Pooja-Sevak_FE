@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { HandHeart, Info, ShieldCheck } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
-import { pickName, type BirthDetails, type MilanReport } from '@/lib/kundali';
+import { displayName, pickName, type BirthDetails, type MilanReport } from '@/lib/kundali';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { ChartStyle } from './kundali-chart';
@@ -68,8 +68,8 @@ export function MilanReportBody({
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
               [
-                ['milan.table.boy', boy.name, m.boy],
-                ['milan.table.girl', girl.name, m.girl],
+                ['milan.table.boy', displayName(boy, lang), m.boy],
+                ['milan.table.girl', displayName(girl, lang), m.girl],
               ] as const
             ).map(([label, name, moon]) => (
               <div key={label} className="rounded-xl bg-accent/40 px-4 py-3">
@@ -200,7 +200,7 @@ export function MilanReportBody({
         <div role="group" aria-label={t('milan.charts')} className="flex flex-wrap gap-2 print:hidden">
           {(['boy', 'girl'] as const).map((w) => (
             <Button key={w} variant={who === w ? 'default' : 'outline'} aria-pressed={who === w} onClick={() => setWho(w)}>
-              {w === 'boy' ? t('milan.showBoy') : t('milan.showGirl')} · {w === 'boy' ? boy.name : girl.name}
+              {w === 'boy' ? t('milan.showBoy') : t('milan.showGirl')} · {displayName(w === 'boy' ? boy : girl, lang)}
             </Button>
           ))}
         </div>
@@ -208,7 +208,7 @@ export function MilanReportBody({
         {(['boy', 'girl'] as const).map((w) => (
           <div key={w} className={cn(who !== w && 'hidden print:block')}>
             <h3 className="mb-3 hidden font-heading text-xl print:block">
-              {w === 'boy' ? t('milan.showBoy') : t('milan.showGirl')} · {w === 'boy' ? boy.name : girl.name}
+              {w === 'boy' ? t('milan.showBoy') : t('milan.showGirl')} · {displayName(w === 'boy' ? boy : girl, lang)}
             </h3>
             <KundaliReportBody
               k={w === 'boy' ? m.boy_kundali : m.girl_kundali}

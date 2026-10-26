@@ -9,7 +9,7 @@ import { useLocale, useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import {
+import { displayName,
   QUOTA_EXHAUSTED,
   type KindQuota,
   type KundaliKind,
@@ -190,7 +190,9 @@ function SavedList({ token }: { token: string }) {
                   {!r.delivered_at && <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs">{t('list.notOpened')}</span>}
                 </p>
                 <p className="font-heading text-xl break-words text-heading">
-                  {'person' in r.input && !r.input.person.name ? personName(r.input.person, t('newborn.label')) : r.title}
+                  {'person' in r.input
+                    ? personName(r.input.person, t('newborn.label'), locale)
+                    : `${displayName(r.input.boy, locale)} & ${displayName(r.input.girl, locale)}`}
                 </p>
                 {people.map((p) => (
                   <p key={p.name + p.date} className="text-sm text-muted-foreground">

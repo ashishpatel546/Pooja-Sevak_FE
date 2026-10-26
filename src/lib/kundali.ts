@@ -9,6 +9,8 @@ export type Gender = 'male' | 'female' | 'other';
 
 export type BirthDetails = {
   name: string; // empty for a newborn not yet named
+  /** The name in Devanagari, shown beside it on Hindi reports. */
+  name_hi?: string;
   newborn?: boolean;
   gender: Gender;
   date: string;
@@ -225,6 +227,11 @@ export function pickName(b: Bilingual, lang: Locale): string {
 }
 
 /** 12.3456° → 12°20′44″. */
+/** A person's name as a report shows it: on Hindi reports with the Devanagari spelling beside it. */
+export function displayName(p: { name: string; name_hi?: string }, lang: Locale): string {
+  return lang === 'hi' && p.name && p.name_hi && p.name_hi !== p.name ? `${p.name} (${p.name_hi})` : p.name;
+}
+
 export function dms(deg: number): string {
   const total = Math.round(deg * 3600);
   const d = Math.floor(total / 3600);

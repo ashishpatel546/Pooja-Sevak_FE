@@ -7,7 +7,7 @@ import { ArrowLeft, Download, ScrollText } from 'lucide-react';
 import { useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import { isMilan, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { displayName, isMilan, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/common/empty-state';
@@ -16,6 +16,7 @@ import { PageShell } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { useApiQuery } from '@/components/customer/use-api';
 import type { ChartStyle } from '@/components/kundali/kundali-chart';
+import { HindiNamesButton } from '@/components/kundali/hindi-names';
 import { KundaliReportBody } from '@/components/kundali/kundali-report';
 import { MilanReportBody } from '@/components/kundali/milan-report';
 import { fmtCivilDate, fmtDate, useReportT } from '@/components/kundali/report-kit';
@@ -186,6 +187,7 @@ export default function KundaliReportPage() {
             ]}
             onChange={changeStyle}
           />
+          {token && <HindiNamesButton reportId={r.id} input={r.input} token={token} onSaved={report.reload} />}
           <Button size="lg" className="sm:ml-auto" onClick={() => window.print()} aria-describedby="print-hint">
             <Download aria-hidden="true" />
             {t('report.print')}
@@ -204,9 +206,9 @@ export default function KundaliReportPage() {
           <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">{milan ? t('report.milanTitle') : t('report.title')}</h1>
           <p className="mt-2 font-heading text-2xl text-[#fbe3b6]">
             {milan
-              ? t('report.milanOf', { boy: milan.boy.name, girl: milan.girl.name })
+              ? t('report.milanOf', { boy: displayName(milan.boy, reportLang), girl: displayName(milan.girl, reportLang) })
               : person!.name
-                ? t('report.of', { name: person!.name })
+                ? t('report.of', { name: displayName(person!, reportLang) })
                 : t('report.ofNewborn')}
           </p>
           <div aria-hidden="true" className="toran mx-auto mt-4 max-w-xs" />

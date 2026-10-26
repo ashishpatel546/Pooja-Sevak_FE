@@ -3,9 +3,11 @@
 import { useId, useState } from 'react';
 import { Loader2, MapPin, Search } from 'lucide-react';
 import { useLocale, useT } from '@/i18n';
+import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import type { Gender } from '@/lib/kundali';
+import { displayName, type Gender } from '@/lib/kundali';
 import { IST_ZONE, placeName, ZONE_CITIES } from '@/lib/place';
+import { hasLatin, nameToDevanagari } from '@/lib/transliterate';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +17,9 @@ import { TimePicker } from './time-picker';
 export type BirthDraft = {
   newborn: boolean;
   name: string;
+  /** Devanagari spelling: suggested from the name until the family edits it. */
+  nameHi?: string;
+  nameHiEdited?: boolean;
   gender: Gender | '';
   date: string;
   time: string;
@@ -172,7 +177,8 @@ export function BirthFields({
 }) {
   const t = useT('kundali');
   const id = useId();
-  const set = <K extends keyof BirthDraft>(k: K, v: BirthDraft[K]) => onChange({ ...value, [k]: v });
+  const set = <K extends keyof BirthDraft>(k: K, v: BirthDraft[K]) => onChange(withSuggestion({ ...value, [k]: v }));
+  const showHindi = hasLatin(value.name);
   const missing = (v: unknown) => showErrors && !v;
 
   return (
@@ -209,6 +215,26 @@ export function BirthFields({
             aria-invalid={(!value.newborn && missing(value.name.trim())) || undefined}
             className="h-11 text-base"
           />
+          {showHindi && (
+            <div className="mt-2 grid gap-1.5">
+              <Label htmlFor={`${id}-name-hi`} className="text-sm font-normal text-muted-foreground">
+                {t('form.nameHi')}
+              </Label>
+              <Input
+                id={`${id}-name-hi`}
+                lang="hi"
+                value={value.nameHi ?? ''}
+                onChange={(e) => onChange({ ...value, nameHi: e.target.value, nameHiEdited: true })}
+                autoComplete="off"
+                maxLength={80}
+                aria-describedby={`${id}-name-hi-hint`}
+                className="h-11 text-base"
+              />
+              <p id={`${id}-name-hi-hint`} className="text-sm text-muted-foreground">
+                {t('form.nameHiHint')}
+              </p>
+            </div>
+          )}
         </div>
         <fieldset className="grid content-start gap-1.5">
           <legend className="mb-1.5 text-sm font-medium">{t('form.gender')}</legend>
@@ -274,6 +300,12 @@ export function BirthFields({
   );
 }
 
+/** Keeps the Devanagari name in step with the English one until the family edits it. */
+function withSuggestion(d: BirthDraft): BirthDraft {
+  if (d.nameHiEdited) return d;
+  return { ...d, nameHi: hasLatin(d.name) ? nameToDevanagari(d.name, d.gender) : '' };
+}
+
 export function isComplete(b: BirthDraft): boolean {
   return !!((b.newborn || b.name.trim()) && b.gender && b.date && b.time && b.place);
 }
@@ -281,6 +313,7 @@ export function isComplete(b: BirthDraft): boolean {
 export function toPayload(b: BirthDraft) {
   return {
     name: b.name.trim(),
+    ...(hasLatin(b.name) && b.nameHi?.trim() && { name_hi: b.nameHi.trim() }),
     ...(b.newborn && { newborn: true }),
     gender: b.gender,
     date: b.date,
@@ -289,7 +322,7 @@ export function toPayload(b: BirthDraft) {
   };
 }
 
-/** The person's name, or a gentle label for a newborn not yet named. */
-export function personName(p: { name: string; newborn?: boolean }, newbornLabel: string): string {
-  return p.name || (p.newborn ? newbornLabel : '');
+/** The person's name (with its Devanagari spelling on Hindi pages), or a gentle label for an unnamed newborn. */
+export function personName(p: { name: string; name_hi?: string; newborn?: boolean }, newbornLabel: string, lang: Locale): string {
+  return p.name ? displayName(p, lang) : p.newborn ? newbornLabel : '';
 }
