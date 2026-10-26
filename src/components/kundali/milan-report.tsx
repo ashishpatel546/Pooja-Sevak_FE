@@ -72,7 +72,7 @@ export function MilanReportBody({
                 ['milan.table.girl', displayName(girl, lang), m.girl],
               ] as const
             ).map(([label, name, moon]) => (
-              <div key={label} className="rounded-xl bg-accent/40 px-4 py-3">
+              <div key={label} className="rounded-xl bg-accent/40 px-4 py-3 print:break-inside-avoid">
                 <dt className="text-sm text-muted-foreground">
                   {t(label)} · {name}
                 </dt>
@@ -158,7 +158,7 @@ export function MilanReportBody({
           ) : (
             <ul className="grid gap-3">
               {doshas.map((k) => (
-                <li key={k.key} className="rounded-xl border px-4 py-3">
+                <li key={k.key} className="rounded-xl border px-4 py-3 print:break-inside-avoid">
                   <p className="font-medium">{t(`milan.${k.key as 'nadi' | 'bhakoot' | 'gana'}Dosha`)}</p>
                   {k.cancelled && (
                     <p className="mt-1 text-tulsi">

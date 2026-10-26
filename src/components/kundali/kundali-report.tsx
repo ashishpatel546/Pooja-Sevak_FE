@@ -221,7 +221,7 @@ function BasicPanel({ k, person, lang, t, n }: Ctx) {
               [t('avakahada.tatva'), n(a.tatva)],
             ]}
           />
-          <div className="mt-4 rounded-xl bg-accent/40 px-4 py-3">
+          <div className="mt-4 rounded-xl bg-accent/40 px-4 py-3 print:break-inside-avoid">
             <p className="text-sm text-muted-foreground">{t('avakahada.namakshar')}</p>
             <p lang="hi" className="font-heading text-3xl text-heading">
               {a.namakshar}
@@ -251,7 +251,7 @@ function PayaSection({ k, t, n }: Pick<Ctx, 'k' | 't' | 'n'>) {
             ['paya.byMoon', a.paya],
           ] as const
         ).map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-diya/50 bg-chandan/40 px-4 py-3">
+          <div key={label} className="rounded-xl border border-diya/50 bg-chandan/40 px-4 py-3 print:break-inside-avoid">
             <dt className="text-sm text-muted-foreground">{t(label)}</dt>
             <dd className="font-heading text-2xl text-heading">{n(value)}</dd>
           </div>
@@ -591,7 +591,7 @@ function DashaPanel({ k, lang, t, n, now, grahaName }: Ctx) {
           {t('dasha.balance', { lord: grahaName(k.dasha.birth_lord), years: balanceYears, months: balanceMonths })}
         </p>
         {md && ad && pd && (
-          <div className="grid gap-2 rounded-xl border border-primary bg-accent/40 px-4 py-3">
+          <div className="grid gap-2 rounded-xl border border-primary bg-accent/40 px-4 py-3 print:break-inside-avoid">
             <p className="text-sm text-muted-foreground">{t('dasha.nowTitle')}</p>
             <p className="font-heading text-xl text-heading">
               {t('dasha.nowLine', { md: grahaName(md.lord), ad: grahaName(ad.lord), pd: grahaName(pd.lord) })}
@@ -611,7 +611,15 @@ function DashaPanel({ k, lang, t, n, now, grahaName }: Ctx) {
           {k.dasha.mahadashas.map((m) => {
             const current = m === md;
             return (
-              <li key={m.start} className={cn('rounded-xl border', current && 'border-primary bg-accent/40')}>
+              <li
+                key={m.start}
+                className={cn(
+                  'rounded-xl border',
+                  // The running mahadasha lists every pratyantar and runs past a page: on paper each
+                  // part gets its own closed border. Every other mahadasha stays on one page.
+                  current ? 'border-primary bg-accent/40 print:box-decoration-clone' : 'print:break-inside-avoid',
+                )}
+              >
                 <details open={current} className="group">
                   <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 [&::-webkit-details-marker]:hidden">
                     <span className="font-medium">
@@ -686,7 +694,7 @@ function ShaniPanel({ k, lang, t, now }: Ctx) {
   return (
     <ReportSection title={t('shani.title')}>
       <p className="mb-4 text-muted-foreground">{t('shani.about')}</p>
-      <div className={cn('mb-4 grid gap-1 rounded-xl px-4 py-3', current ? 'border border-primary bg-accent/40' : 'bg-tulsi/10')}>
+      <div className={cn('mb-4 grid gap-1 rounded-xl px-4 py-3 print:break-inside-avoid', current ? 'border border-primary bg-accent/40' : 'bg-tulsi/10')}>
         {current ? (
           <>
             <p className="font-medium">
