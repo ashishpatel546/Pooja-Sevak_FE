@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Download, ScrollText } from 'lucide-react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Download, HandHeart, ScrollText } from 'lucide-react';
 import { useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import { displayName, isMilan, pickName, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import {
+  displayName,
+  isMilan,
+  pickName,
+  setAttachedKundali,
+  type KundaliQuota,
+  type KundaliReportView,
+} from '@/lib/kundali';
 import { normalizeBusinessProfile } from '@/lib/site-info';
 import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY } from '@/lib/support';
 import { useRequireAuth } from '@/lib/use-require-auth';
@@ -71,7 +78,13 @@ export default function KundaliReportPage() {
   const { id } = useParams<{ id: string }>();
   const ts = useT('kundali'); // site language, for the page chrome before a report loads
   const { ready, token } = useRequireAuth();
-  const report = useApiQuery<KundaliReportView>(ready ? `/kundali/reports/${id}` : null, { token });
+  // ?booking= opens a kundali a family attached to a booking (read-only, for its pandit).
+  const booking = useSearchParams().get('booking');
+  const router = useRouter();
+  const report = useApiQuery<KundaliReportView>(
+    !ready ? null : booking ? `/kundali/bookings/${booking}/report` : `/kundali/reports/${id}`,
+    { token },
+  );
   const exhausted = report.status === 403;
   const quota = useApiQuery<KundaliQuota>(ready && exhausted ? '/kundali/quota' : null, { token });
   // Contact details printed on every PDF page; the owner edits them in Admin → Settings.
@@ -132,7 +145,7 @@ export default function KundaliReportPage() {
 
   const changeLang = (next: Locale) => {
     setLang(next);
-    if (token) void api(`/kundali/reports/${id}/language`, { method: 'PUT', token, body: { language: next } }).catch(() => {});
+    if (token && !booking) void api(`/kundali/reports/${id}/language`, { method: 'PUT', token, body: { language: next } }).catch(() => {});
   };
   const changeStyle = (next: ChartStyle) => {
     setChartStyle(next);
@@ -144,9 +157,14 @@ export default function KundaliReportPage() {
   };
 
   const back = (
-    <Button variant="ghost" className="-ml-3 print:hidden" render={<Link href="/kundali?tab=mine" />} nativeButton={false}>
+    <Button
+      variant="ghost"
+      className="-ml-3 print:hidden"
+      render={<Link href={booking ? '/pandit/bookings' : '/kundali?tab=mine'} />}
+      nativeButton={false}
+    >
       <ArrowLeft aria-hidden="true" />
-      {ts('report.back')}
+      {booking ? ts('report.backBookings') : ts('report.back')}
     </Button>
   );
 
@@ -227,7 +245,23 @@ export default function KundaliReportPage() {
             ]}
             onChange={changeStyle}
           />
-          {token && <EditNamesButton reportId={r.id} input={r.input} token={token} onSaved={report.reload} />}
+          {token && !booking && (
+            <EditNamesButton reportId={r.id} input={r.input} token={token} onSaved={report.reload} />
+          )}
+          {!booking && (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => {
+                setAttachedKundali(r.id);
+                router.push('/browse');
+              }}
+              aria-describedby="ask-hint"
+            >
+              <HandHeart aria-hidden="true" />
+              {t('ask.button')}
+            </Button>
+          )}
           <Button size="lg" className="sm:ml-auto" onClick={() => window.print()} aria-describedby="print-hint">
             <Download aria-hidden="true" />
             {t('report.print')}
@@ -236,6 +270,11 @@ export default function KundaliReportPage() {
         <p id="print-hint" className="text-sm text-muted-foreground sm:text-right">
           {t('report.printHint')}
         </p>
+        {!booking && (
+          <p id="ask-hint" className="sr-only">
+            {t('ask.hint')}
+          </p>
+        )}
       </div>
 
       <PrintPages>

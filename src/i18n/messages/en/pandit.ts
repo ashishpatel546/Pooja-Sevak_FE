@@ -36,6 +36,7 @@ const pandit = {
   'card.sankalp.occasion': 'Occasion',
   'card.sankalp.family': 'Family members',
   'card.sankalp.empty': 'The family hasn’t shared sankalp details. You may ask for the devotee’s name and gotra before beginning.',
+  'card.kundali': 'View the family’s kundali',
   'card.note': 'Note from the family',
   'card.cancelReason': 'Reason for cancelling: {reason}',
   'card.unpaid': 'The family hasn’t completed payment yet.',

@@ -265,3 +265,23 @@ export function dms(deg: number): string {
   const s = total % 60;
   return `${d}°${String(m).padStart(2, '0')}′${String(s).padStart(2, '0')}″`;
 }
+
+/** A kundali the family chose to share with the next pandit they book ("Ask a pandit ji"). */
+const ATTACH_KEY = 'ps_attach_kundali';
+
+export function readAttachedKundali(): string | null {
+  try {
+    return sessionStorage.getItem(ATTACH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAttachedKundali(id: string | null) {
+  try {
+    if (id) sessionStorage.setItem(ATTACH_KEY, id);
+    else sessionStorage.removeItem(ATTACH_KEY);
+  } catch {
+    /* the family can still pick the kundali on the booking form */
+  }
+}

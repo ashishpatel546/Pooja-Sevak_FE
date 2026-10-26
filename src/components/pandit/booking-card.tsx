@@ -17,6 +17,7 @@ import {
   Video,
   XCircle,
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { Booking } from '@/lib/types';
@@ -373,6 +374,19 @@ export function PanditBookingCard({
                 {t('card.note')}
               </p>
               <p className="text-sm whitespace-pre-line text-muted-foreground">{b.customer_notes}</p>
+            </div>
+          )}
+
+          {b.kundali_report_id && (
+            <div className="md:col-span-2">
+              <Button
+                variant="outline"
+                render={<Link href={`/kundali/${b.kundali_report_id}?booking=${b.id}`} />}
+                nativeButton={false}
+              >
+                <ScrollText aria-hidden="true" />
+                {t('card.kundali')}
+              </Button>
             </div>
           )}
 

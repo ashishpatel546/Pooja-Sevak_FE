@@ -421,6 +421,13 @@ function Detail() {
                     />
                   </span>
                 </Row>
+                {b.kundali_report_id && (
+                  <Row label={t('detail.kundali')}>
+                    <Link href={`/kundali/${b.kundali_report_id}`} className="font-medium text-primary underline-offset-4 hover:underline">
+                      {t('detail.kundaliOpen')}
+                    </Link>
+                  </Row>
+                )}
                 {b.customer_notes && (
                   <Row label={t('detail.notes')}>
                     <span className="whitespace-pre-line">{b.customer_notes}</span>
