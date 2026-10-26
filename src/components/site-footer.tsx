@@ -25,6 +25,7 @@ export async function SiteFooter() {
             ['/online', t('footer.online')],
             ['/panchang', t('footer.panchang')],
             ['/kundali', t('footer.kundali')],
+            ['/muhurat', t('footer.muhurat')],
           ]}
         />
         <FooterCol

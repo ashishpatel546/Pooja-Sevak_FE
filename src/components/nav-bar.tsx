@@ -31,6 +31,7 @@ type LinkKey =
   | 'link.online'
   | 'link.panchang'
   | 'link.kundali'
+  | 'link.muhurat'
   | 'link.reminders'
   | 'link.myBookings'
   | 'link.panditBookings'
@@ -52,6 +53,7 @@ function linksFor(role: Role | undefined): NavLink[] {
     { href: '/online', label: 'link.online' },
     { href: '/panchang', label: 'link.panchang' },
     { href: '/kundali', label: 'link.kundali' },
+    { href: '/muhurat', label: 'link.muhurat' },
   ];
   if (role === 'customer')
     return [
@@ -67,6 +69,7 @@ function linksFor(role: Role | undefined): NavLink[] {
       { href: '/pandit/services', label: 'link.panditServices' },
       { href: '/pandit/profile', label: 'link.panditProfile' },
       { href: '/panchang', label: 'link.panchang' },
+      { href: '/muhurat', label: 'link.muhurat' },
       CONTACT,
     ];
   if (role === 'admin')
