@@ -56,7 +56,7 @@ export function MilanReportBody({
   const manglikState = (level: 'none' | 'partial' | 'present') => t(`milan.manglikState.${level}`);
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 gap-6 print:block print:space-y-6">
       <section className="grid grid-cols-1 items-center gap-6 rounded-2xl border bg-card p-5 sm:grid-cols-[auto_1fr] sm:p-6 print:break-inside-avoid">
         <div className="mx-auto flex flex-col items-center">
           <p className="text-sm text-muted-foreground">{t('milan.scoreLabel')}</p>
@@ -193,7 +193,7 @@ export function MilanReportBody({
         </Button>
       </section>
 
-      <section aria-labelledby="milan-charts" className="grid grid-cols-1 gap-4">
+      <section aria-labelledby="milan-charts" className="grid grid-cols-1 gap-4 print:block print:space-y-4">
         <h2 id="milan-charts" className="font-heading text-2xl text-heading">
           {t('milan.charts')}
         </h2>

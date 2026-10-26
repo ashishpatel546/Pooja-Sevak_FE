@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TimePicker } from './time-picker';
 
 export type BirthDraft = {
   newborn: boolean;
@@ -252,15 +253,12 @@ export function BirthFields({
         </div>
         <div className="grid content-start gap-1.5">
           <Label htmlFor={`${id}-time`}>{t('form.time')}</Label>
-          <Input
+          <TimePicker
             id={`${id}-time`}
-            type="time"
             value={value.time}
-            onChange={(e) => set('time', e.target.value)}
-            required
-            aria-describedby={`${id}-time-hint`}
-            aria-invalid={missing(value.time) || undefined}
-            className="h-11 text-base"
+            onChange={(v) => set('time', v)}
+            describedBy={`${id}-time-hint`}
+            invalid={missing(value.time)}
           />
           <p id={`${id}-time-hint`} className="text-sm text-muted-foreground">
             {t('form.timeHint')}

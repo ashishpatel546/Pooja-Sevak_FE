@@ -37,7 +37,15 @@ function Labels({ x, y, labels, perRow, lagnaKey }: { x: number; y: number; labe
   return (
     <>
       {rows.map((row, r) => (
-        <text key={r} x={x} y={top + r * lineH} textAnchor="middle" dominantBaseline="middle" className="text-[11px]">
+        <text
+          key={r}
+          x={x}
+          y={top + r * lineH}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          // Latin abbreviations read lighter than Devanagari at the same size; even them out.
+          className={/[A-Za-z]/.test(row[0].label) ? 'text-[12px] font-medium' : 'text-[11px]'}
+        >
           {row.map((p, i) => (
             <tspan
               key={p.key}

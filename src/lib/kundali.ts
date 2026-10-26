@@ -52,6 +52,56 @@ export type ManglikInfo = {
 };
 
 export type DashaPeriod = { lord: GrahaKey; start: string; end: string };
+export type Antardasha = DashaPeriod & { pratyantardashas: DashaPeriod[] };
+export type Mahadasha = DashaPeriod & { antardashas: Antardasha[] };
+
+export type DoshaKey =
+  | 'mangal'
+  | 'kaal_sarp'
+  | 'pitra'
+  | 'grahan'
+  | 'guru_chandal'
+  | 'angarak'
+  | 'shrapit'
+  | 'vish'
+  | 'kemadruma';
+export type Dosha = {
+  key: DoshaKey;
+  present: boolean;
+  cancelled: boolean;
+  grahas: GrahaKey[];
+  house: number | null;
+  kind: Bilingual | null;
+};
+
+export type YogaKey = 'gajakesari' | 'budhaditya' | 'chandra_mangal' | 'ruchaka' | 'bhadra' | 'hamsa' | 'malavya' | 'shasha';
+export type Yoga = { key: YogaKey; grahas: GrahaKey[]; house: number };
+
+export type VargaKey = 'd2' | 'd3' | 'd7' | 'd9' | 'd10' | 'd12';
+export type Varga = { lagna: number; grahas: Record<GrahaKey, number> };
+
+export type Bhava = { house: number; sign: number; lord: GrahaKey; lord_house: number; grahas: GrahaKey[] };
+
+export type Shubh = {
+  rashi_lord: GrahaKey;
+  lagna_lord: GrahaKey;
+  ank: number;
+  moolank: number;
+  bhagyank: number;
+  vaar: Bilingual;
+  rang: Bilingual;
+  dhatu: Bilingual;
+  devta: Bilingual;
+  disha: Bilingual;
+  ratna: Bilingual;
+};
+
+export type ShaniPeriod = {
+  kind: 'sade_sati' | 'kantak' | 'ashtam';
+  start: string;
+  end: string;
+  phases: { phase: 'rising' | 'peak' | 'setting'; start: string; end: string }[];
+};
 
 export type Kundali = {
   birth: {
@@ -98,13 +148,21 @@ export type Kundali = {
     tatva: Bilingual;
     namakshar: string;
     namakshar_all: string[];
+    paya: Bilingual;
+    paya_nakshatra: Bilingual;
   };
   manglik: ManglikInfo;
   dasha: {
     birth_lord: GrahaKey;
     balance_years: number;
-    mahadashas: (DashaPeriod & { antardashas: DashaPeriod[] })[];
+    mahadashas: Mahadasha[];
   };
+  bhavas: Bhava[];
+  vargas: Record<VargaKey, Varga>;
+  doshas: Dosha[];
+  yogas: Yoga[];
+  shubh: Shubh;
+  shani: ShaniPeriod[];
 };
 
 export type KootaKey = 'varna' | 'vashya' | 'tara' | 'yoni' | 'graha_maitri' | 'gana' | 'bhakoot' | 'nadi';

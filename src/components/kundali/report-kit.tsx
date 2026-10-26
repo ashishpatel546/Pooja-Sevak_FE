@@ -5,7 +5,7 @@ import { INTL_LOCALE, type Locale } from '@/i18n/config';
 import enKundali from '@/i18n/messages/en/kundali';
 import hiKundali from '@/i18n/messages/hi/kundali';
 import { createTranslator, type LoadedMessages } from '@/i18n/translate';
-import type { GrahaPosition, Kundali } from '@/lib/kundali';
+import type { GrahaPosition, Kundali, VargaKey } from '@/lib/kundali';
 import { cn } from '@/lib/utils';
 import type { ChartPlacement } from './kundali-chart';
 
@@ -27,7 +27,7 @@ export const RASHI_NAMES: Record<Locale, string[]> = {
   hi: ['मेष', 'वृषभ', 'मिथुन', 'कर्क', 'सिंह', 'कन्या', 'तुला', 'वृश्चिक', 'धनु', 'मकर', 'कुंभ', 'मीन'],
 };
 
-const LAGNA_SHORT: Record<Locale, string> = { en: 'Asc', hi: 'ल' };
+const LAGNA_SHORT: Record<Locale, string> = { en: 'La', hi: 'ल' };
 
 /** Short chart label: retrograde *, exalted ↑, debilitated ↓ (Rahu and Ketu are always retrograde). */
 export function grahaLabel(g: GrahaPosition, lang: Locale): string {
@@ -48,6 +48,18 @@ export function chartData(k: Kundali, kind: ChartKind, lang: Locale): { lagnaSig
     ...k.grahas.map((g) => ({ key: g.key, label: grahaLabel(g, lang), sign: signOf(g) })),
   ];
   return { lagnaSign, placements };
+}
+
+/** Placements for a divisional chart (its own lagna is the first house). */
+export function vargaChartData(k: Kundali, varga: VargaKey, lang: Locale): { lagnaSign: number; placements: ChartPlacement[] } {
+  const v = k.vargas[varga];
+  return {
+    lagnaSign: v.lagna,
+    placements: [
+      { key: 'la', label: LAGNA_SHORT[lang], sign: v.lagna },
+      ...k.grahas.map((g) => ({ key: g.key, label: grahaLabel(g, lang), sign: v.grahas[g.key] })),
+    ],
+  };
 }
 
 export function fmtCivilDate(date: string, lang: Locale): string {
@@ -82,10 +94,27 @@ export function utcOffset(minutes: number): string {
   return `UTC${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/** A titled report section; avoids breaking across printed pages where it can. */
-export function ReportSection({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
+/** A titled report section; small ones avoid breaking across printed pages. */
+export function ReportSection({
+  title,
+  children,
+  className,
+  long = false,
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+  /** Long sections (dasha tables) may break across pages. */
+  long?: boolean;
+}) {
   return (
-    <section className={cn('rounded-2xl border bg-card p-5 sm:p-6 print:break-inside-avoid print:rounded-none print:border-0 print:p-0', className)}>
+    <section
+      className={cn(
+        'rounded-2xl border bg-card p-5 sm:p-6 print:rounded-none print:border-0 print:p-0',
+        !long && 'print:break-inside-avoid',
+        className,
+      )}
+    >
       <h2 className="font-heading text-2xl leading-snug text-heading">{title}</h2>
       <div aria-hidden="true" className="toran mt-2 mb-4" />
       {children}

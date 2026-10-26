@@ -76,6 +76,26 @@ export default function KundaliReportPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is client-only
   useEffect(() => setChartStyle(readStyle()), []);
 
+  // The PDF should hold every dasha period, so open collapsed sections while printing
+  // (except pratyantar lists outside the running mahadasha, which would run to many pages).
+  useEffect(() => {
+    let opened: HTMLDetailsElement[] = [];
+    const before = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>('article details:not([open]):not([data-print-skip])')];
+      opened.forEach((d) => (d.open = true));
+    };
+    const after = () => {
+      opened.forEach((d) => (d.open = false));
+      opened = [];
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, []);
+
   const reportLang: Locale = lang ?? report.data?.language ?? 'hi';
   const t = useReportT(reportLang);
 
@@ -176,7 +196,7 @@ export default function KundaliReportPage() {
         </p>
       </div>
 
-      <article lang={reportLang} className="grid grid-cols-1 gap-6">
+      <article lang={reportLang} className="grid grid-cols-1 gap-6 print:block print:space-y-6">
         <header className="sandhya stars relative overflow-hidden rounded-2xl px-5 py-8 text-center sm:px-8 print:rounded-none">
           <p lang="sa" className="font-heading text-lg text-diya">
             {ts('hero.invocation')}
