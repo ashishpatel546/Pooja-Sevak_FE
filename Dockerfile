@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # ---- deps: install exactly what package-lock.json pins ----
-FROM node:22-alpine AS deps
+# Node 26 LTS ("Lithium"); keep all three stages on the same tag.
+FROM node:26-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
@@ -10,7 +11,7 @@ COPY scripts ./scripts
 RUN npm ci
 
 # ---- build: compile the standalone Next.js server ----
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 # NEXT_PUBLIC_* values are inlined into the client bundle at build time.
 ARG NEXT_PUBLIC_API_URL=http://localhost:6001/v1
@@ -23,7 +24,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime: only the standalone output, as a non-root user ----
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
