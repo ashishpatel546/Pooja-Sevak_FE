@@ -20,6 +20,7 @@ import { WelcomeBand } from './welcome-band';
 import { MobilePrompt } from './mobile-prompt';
 import { useApi } from './use-api';
 import { hasStarted, relativeWhen } from './time';
+import { ReferCard } from '@/components/growth/refer-card';
 
 const ACTIVE = new Set(['pending', 'confirmed', 'in_progress']);
 
@@ -111,6 +112,8 @@ export function CustomerHome({ user, token }: { user: AuthUser; token: string | 
           ))}
         </ul>
       </section>
+
+      <ReferCard token={token} />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { MIN_PASSWORD, PasswordStrength } from '@/components/auth/password-stren
 import { destinationAfterAuth, safeNext } from '@/components/auth/safe-next';
 import { GoogleConsentNote, TermsConsent } from '@/components/auth/consent';
 import { RoleCards, type SignupRole } from '@/components/auth/role-cards';
+import { ReferralSignupNote } from '@/components/growth/referral-signup-note';
 
 function SignupForm() {
   const t = useT('auth');
@@ -80,6 +81,8 @@ function SignupForm() {
       <p className="mt-1 text-muted-foreground">
         {role === 'pandit' ? t('signup.subtitlePandit') : t('signup.subtitleCustomer')}
       </p>
+
+      {role !== 'pandit' && <ReferralSignupNote className="mt-4" />}
 
       <RoleCards className="mt-6" legend={t('signup.accountType')} value={role} onChange={setRole} />
 
