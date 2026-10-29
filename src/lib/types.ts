@@ -292,6 +292,8 @@ export type CreateBookingInput = {
   samagri_by?: SamagriBy;
   /** One of the family's opened kundali reports, shared with the pandit. */
   kundali_report_id?: string;
+  /** Coupon to apply; re-validated by the server. */
+  coupon_code?: string;
 };
 
 export type Booking = {
@@ -323,6 +325,9 @@ export type Booking = {
   /** Platform fee paid by the customer on top of the puja price (0 for older bookings). */
   customer_fee_amount?: number | null;
   customer_fee_rule?: CustomerFeeRule | null;
+  /** Coupon discount (rupees) absorbed by the platform; 0/absent = none. */
+  discount_amount?: number | null;
+  coupon_code?: string | null;
   cancellation_reason: string | null;
   customer_notes: string | null;
   sankalp: Sankalp | null;
@@ -828,7 +833,7 @@ export type Remembrance = RemembranceInput & {
   created_at: string;
 };
 
-export type ReminderChannels = { email: boolean; sms: boolean; in_app: boolean };
+export type ReminderChannels = { email: boolean; sms: boolean; in_app: boolean; whatsapp?: boolean };
 
 export type ReminderPreferences = {
   /** null until the user (or the app, automatically) saves a place; server then uses Lucknow/IST. */
@@ -871,4 +876,121 @@ export type AccountDeletionPreview = {
   blocked: { code: 'in_progress' | 'pandit_upcoming' | 'last_admin'; message: string } | null;
   bookings_to_cancel: number;
   paid_bookings_to_refund: number;
+};
+
+/* ───────────── growth: coupons, offers, referrals, family reminders ───────────── */
+
+export type CouponKind = 'festival' | 'referral' | 'general';
+export type CouponDiscountType = 'percent' | 'flat';
+
+/** Public summary of a coupon (money in paise). */
+export type CouponSummary = {
+  code: string;
+  kind: CouponKind;
+  discount_type: CouponDiscountType;
+  value: number;
+  max_discount_paise: number | null;
+  min_order_paise: number;
+  valid_to: string | null;
+  first_booking_only: boolean;
+  festival_label: string | null;
+};
+
+export type CouponQuote = {
+  coupon: CouponSummary;
+  subtotal_paise: number;
+  discount_paise: number;
+  payable_paise: number;
+};
+
+export type MyCoupon = CouponSummary & { status: 'available' | 'used' | 'expired' };
+
+export type ActiveOffer = CouponSummary & {
+  banner_text_hi: string | null;
+  banner_text_en: string | null;
+  banner_link: string | null;
+  service_definition_ids: string[];
+};
+
+export type AdminCoupon = {
+  id: string;
+  code: string;
+  kind: CouponKind;
+  discount_type: CouponDiscountType;
+  value: number;
+  max_discount_paise: number | null;
+  min_order_paise: number;
+  valid_from: string | null;
+  valid_to: string | null;
+  usage_limit_total: number | null;
+  usage_limit_per_user: number | null;
+  first_booking_only: boolean;
+  service_definition_ids: string[];
+  festival_label: string | null;
+  banner_text_hi: string | null;
+  banner_text_en: string | null;
+  banner_link: string | null;
+  is_active: boolean;
+  uses: number;
+  discount_given_paise: number;
+  live: boolean;
+  created_at: string;
+};
+
+export type AdminCouponList = { coupons: AdminCoupon[]; personal: { issued: number; used: number } };
+
+export type ReferralStatus = 'signed_up' | 'first_puja_done' | 'reward_issued';
+
+export type ReferralMe = {
+  enabled: boolean;
+  code: string;
+  share_url: string;
+  reward_paise: number;
+  coupon_valid_days: number;
+  referrals: { id: string; friend_name: string; joined_at: string; status: ReferralStatus }[];
+  coupons: MyCoupon[];
+};
+
+export type FamilyReminderSettings = { shraddh: boolean; family_birthdays: boolean; kuldevta: boolean };
+
+export type ShraddhPlanItem = {
+  remembrance_id: string;
+  person_name: string;
+  relation: string | null;
+  death_tithi_en: string;
+  death_tithi_hi: string;
+  pitru_paksha_date: string | null;
+  shraddh_name_en: string;
+  shraddh_name_hi: string;
+  rule: 'paksha' | 'purnima' | 'chaturdashi' | 'amavasya';
+  note_en: string | null;
+  note_hi: string | null;
+  chaturdashi_date: string | null;
+  punyatithi_date: string;
+  puja_slug: string;
+};
+
+export type FamilyBirthdayPlan = {
+  member_id: string;
+  name: string;
+  relation: string;
+  tithi_date: string | null;
+  tithi_label_en: string | null;
+  tithi_label_hi: string | null;
+  nakshatra_date: string | null;
+  nakshatra: string | null;
+  puja_slugs: string[];
+};
+
+export type FamilyPlan = {
+  settings: FamilyReminderSettings;
+  shraddh: ShraddhPlanItem[];
+  birthdays: FamilyBirthdayPlan[];
+  members_missing_dob: string[];
+  kuldevta: {
+    kuldevta: string;
+    deity: string;
+    puja_slug: string;
+    observances: { festival: string; date: string; name_en: string; name_hi: string }[];
+  } | null;
 };

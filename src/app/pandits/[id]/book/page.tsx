@@ -29,6 +29,7 @@ import type {
   Availability,
   Booking,
   BookingType,
+  CouponQuote,
   CreateBookingInput,
   CustomerFeeConfig,
   FamilyProfile,
@@ -38,7 +39,8 @@ import type {
   Sankalp,
 } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { bookingFee, bookingSamagri, computeCustomerFee, customerPayable } from '@/lib/customer-fee';
+import { bookingDiscount, bookingFee, bookingSamagri, computeCustomerFee, customerPayable } from '@/lib/customer-fee';
+import { CouponField, couponErrorCode } from '@/components/growth/coupon-field';
 import { AartiFrame } from '@/components/brand/aarti-frame';
 import { isFullyVerified, VerificationPanel, verificationMissing } from '@/components/auth/verification';
 import { EmptyState } from '@/components/common/empty-state';
@@ -222,6 +224,9 @@ function Wizard({
   const verifyRef = useRef<HTMLDivElement>(null);
 
   const [created, setCreated] = useState<Booking | null>(null);
+  // Coupon preview; the server re-checks it (under a lock) when the booking is made.
+  const [coupon, setCoupon] = useState<CouponQuote | null>(null);
+  const tg = useT('growth');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -235,7 +240,9 @@ function Wizard({
   // The fee is on the dakshina only; the samagri kit is added on top in full.
   const fee = created ? bookingFee(created) : computeCustomerFee(price, feeRule.data);
   const samagri = created ? bookingSamagri(created) : wantKit ? kitPrice : 0;
-  const payable = created ? customerPayable(created) : price + samagri + fee;
+  const discount = created ? bookingDiscount(created) : coupon ? coupon.discount_paise / 100 : 0;
+  const couponCode = created ? (created.coupon_code ?? null) : (coupon?.coupon.code ?? null);
+  const payable = created ? customerPayable(created) : +(price + samagri + fee - discount).toFixed(2);
   const samagriByPandit = created ? created.samagri_by === 'pandit' : wantKit;
 
   const availability = useApiQuery<Availability>(step >= 1 ? `/pandits/${pandit.id}/availability` : null, {
@@ -359,6 +366,7 @@ function Wizard({
         ...(notes.trim() ? { customer_notes: notes.trim() } : {}),
         ...(buildSankalp() ? { sankalp: buildSankalp() } : {}),
         ...(kundaliId && shareable.some((r) => r.id === kundaliId) ? { kundali_report_id: kundaliId } : {}),
+        ...(coupon ? { coupon_code: coupon.coupon.code } : {}),
       };
       setSubmitting(true);
       try {
@@ -376,6 +384,14 @@ function Wizard({
         setSubmitting(false);
         if (verificationMissing(e)) {
           await onVerificationRequired();
+          return;
+        }
+        if (couponErrorCode(e)) {
+          // The coupon stopped applying (used up, expired …): drop it and let them review.
+          setCoupon(null);
+          toast.error(tg(`coupon.error.${couponErrorCode(e)}` as 'coupon.error.generic'), {
+            description: tg('coupon.removedOnBooking'),
+          });
           return;
         }
         if (e instanceof ApiError && (e.status === 409 || e.status === 400)) {
@@ -853,10 +869,31 @@ function Wizard({
                   </SummaryRow>
                 )}
               </dl>
+              <CouponField
+                token={token}
+                pricing={{
+                  pandit_service_id: service.id,
+                  puja_mode: mode,
+                  booking_type: bookingType,
+                  ...(wantKit ? { samagri_by: 'pandit' as const } : {}),
+                }}
+                quote={created ? null : coupon}
+                onQuote={setCoupon}
+                disabled={!!created}
+              />
               <div className="mt-4 rounded-xl bg-muted px-4 py-3">
-                <FeeLines price={price} fee={fee} samagri={samagri} className="mb-2 border-b pb-2" />
+                <FeeLines
+                  price={price}
+                  fee={fee}
+                  samagri={samagri}
+                  discount={discount}
+                  couponCode={couponCode}
+                  className="mb-2 border-b pb-2"
+                />
                 <div className="flex items-baseline justify-between">
-                  <span className="font-medium">{hasExtras(fee, samagri) ? t('price.total') : t('review.total')}</span>
+                  <span className="font-medium">
+                    {hasExtras(fee, samagri, discount) ? t('price.total') : t('review.total')}
+                  </span>
                   <span className="text-2xl font-semibold tabular-nums">{f.inr(payable)}</span>
                 </div>
               </div>
@@ -918,7 +955,14 @@ function Wizard({
               <SummaryRow label={t('review.when')}>{whenText ?? t('summary.notChosen')}</SummaryRow>
               {samagriByPandit && <SummaryRow label={ts('book.title')}>{ts('by.pandit')}</SummaryRow>}
             </dl>
-            <FeeLines price={price} fee={fee} samagri={samagri} className="mt-3 border-t pt-3" />
+            <FeeLines
+              price={price}
+              fee={fee}
+              samagri={samagri}
+              discount={discount}
+              couponCode={couponCode}
+              className="mt-3 border-t pt-3"
+            />
             <div className="mt-3 flex items-baseline justify-between border-t pt-3">
               <span className="text-sm text-muted-foreground">{t('summary.total')}</span>
               <span className="text-2xl font-semibold tabular-nums">{f.inr(payable)}</span>

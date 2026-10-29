@@ -2,7 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, CalendarDays, LayoutDashboard, MessageSquareWarning, Settings2, UsersRound, Wallet, type LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarDays,
+  LayoutDashboard,
+  MessageSquareWarning,
+  Settings2,
+  TicketPercent,
+  UsersRound,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useT } from '@/i18n';
 
@@ -13,6 +23,7 @@ const LINKS = [
   { href: '/admin/settlements', key: 'settlements', icon: Wallet },
   { href: '/admin/chats', key: 'chats', icon: MessageSquareWarning },
   { href: '/admin/catalog', key: 'catalog', icon: BookOpen },
+  { href: '/admin/offers', key: 'offers', icon: TicketPercent },
   { href: '/admin/settings', key: 'settings', icon: Settings2 },
 ] as const satisfies readonly { href: string; key: string; icon: LucideIcon }[];
 
@@ -20,6 +31,7 @@ const LINKS = [
 export function AdminNav() {
   const pathname = usePathname();
   const t = useT('admin');
+  const tg = useT('growth');
   const isActive = (href: string) =>
     href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
   return (
@@ -37,7 +49,7 @@ export function AdminNav() {
               )}
             >
               <l.icon className="size-4" aria-hidden="true" />
-              {t(`nav.${l.key}`)}
+              {l.key === 'offers' ? tg('admin.nav') : t(`nav.${l.key}`)}
             </Link>
           </li>
         ))}

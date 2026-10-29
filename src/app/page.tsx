@@ -51,6 +51,7 @@ import { organizationSchema, websiteSchema } from '@/lib/seo/schema';
 import { getSiteInfo } from '@/lib/business-profile';
 import en_common from '@/i18n/messages/en/common';
 import hi_common from '@/i18n/messages/hi/common';
+import { OfferBanner } from '@/components/growth/offer-banner';
 
 type HomeKey = keyof Messages['home'] & string;
 
@@ -188,6 +189,7 @@ export default async function Home() {
         ]}
       />
       <PlaceSync requested={requested} />
+      <OfferBanner />
       {/* Hero — the evening sky at aarti */}
       <section className="sandhya stars relative overflow-hidden">
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pt-14 pb-24 sm:px-6 md:grid-cols-[1.15fr_1fr] md:pt-20 md:pb-32">

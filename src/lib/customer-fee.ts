@@ -19,12 +19,20 @@ export const bookingFee = (b: Pick<Booking, 'customer_fee_amount'>) => Number(b.
 /** The pandit's samagri kit on a booking (0 when the family arranges it, and for older bookings). */
 export const bookingSamagri = (b: Pick<Booking, 'samagri_amount'>) => Number(b.samagri_amount ?? 0);
 
+/** Coupon discount on a booking (absorbed by the platform; 0 when none). */
+export const bookingDiscount = (b: Pick<Booking, 'discount_amount'>) => Number(b.discount_amount ?? 0);
+
+/** Dakshina + samagri kit + platform fee, before any coupon. Mirrors backend customerSubtotal. */
+export const customerSubtotal = (b: Pick<Booking, 'total_amount' | 'customer_fee_amount' | 'samagri_amount'>) =>
+  +(Number(b.total_amount) + bookingSamagri(b) + bookingFee(b)).toFixed(2);
+
 /**
  * What the customer pays (and gets back on a full refund): dakshina + samagri
- * kit + platform fee. Mirrors backend customerPayable.
+ * kit + platform fee − coupon discount. Mirrors backend customerPayable.
  */
-export const customerPayable = (b: Pick<Booking, 'total_amount' | 'customer_fee_amount' | 'samagri_amount'>) =>
-  +(Number(b.total_amount) + bookingSamagri(b) + bookingFee(b)).toFixed(2);
+export const customerPayable = (
+  b: Pick<Booking, 'total_amount' | 'customer_fee_amount' | 'samagri_amount' | 'discount_amount'>,
+) => +(customerSubtotal(b) - bookingDiscount(b)).toFixed(2);
 
 /** What the pandit receives: dakshina − commission + samagri kit. Mirrors backend panditPayout. */
 export const panditPayout = (b: Pick<Booking, 'pandit_credit' | 'samagri_amount'>) =>
