@@ -3,6 +3,7 @@ import { LOCALES } from '@/i18n/config';
 import { fetchCatalogList, fetchListedPandits } from '@/lib/seo/data';
 import { absoluteUrl, withLang } from '@/lib/seo/site';
 import { fetchBusinessProfile } from '@/lib/business-profile';
+import { kindRoute, MUHURAT_KINDS } from '@/lib/muhurat';
 import { RASHIS } from '@/lib/rashifal';
 
 // Regenerate hourly so new pujas and pandits appear without a rebuild.
@@ -73,6 +74,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...localized('/panchang', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
     ...localized('/kundali', { lastModified: now, changeFrequency: 'monthly', priority: 0.8 }),
     ...localized('/muhurat', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
+    ...MUHURAT_KINDS.flatMap((k) =>
+      localized(`/muhurat/${kindRoute(k)}`, { lastModified: now, changeFrequency: 'weekly', priority: 0.7 }),
+    ),
     ...localized('/rashifal', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
     ...RASHIS.flatMap((r) =>
       localized(`/rashifal/${r.slug}`, { lastModified: now, changeFrequency: 'daily', priority: 0.7 }),
