@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BellRing, Check, Loader2, Mail, MessageSquareText, Smartphone } from 'lucide-react';
+import { BellRing, Check, Loader2, Mail, MessageCircle, MessageSquareText, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useT } from '@/i18n';
 import type { Messages } from '@/i18n/messages';
@@ -18,6 +18,7 @@ import { PlaceControl } from './place-control';
 import { usePlaceName } from './use-place';
 import { usePanchangText } from './use-panchang-text';
 import { useErrorText } from './use-error-text';
+import { useApiQuery } from '@/components/customer/use-api';
 
 type RemindersKey = keyof Messages['reminders'] & string;
 const LEAD_DAYS = [0, 1, 3, 7];
@@ -167,10 +168,13 @@ export function ReminderPreferencesForm({
     else set.delete(key);
     update({ observances: OBSERVANCE_KEYS.filter((k) => set.has(k)) });
   };
+  const tg = useT('growth');
+  const channels = useApiQuery<{ whatsapp: boolean }>('/notifications/channels');
   const setChannel = (key: keyof ReminderChannels, on: boolean) =>
     update({ channels: { ...prefs.channels, [key]: on } });
 
-  const noChannel = !prefs.channels.email && !prefs.channels.sms && !prefs.channels.in_app;
+  const noChannel =
+    !prefs.channels.email && !prefs.channels.sms && !prefs.channels.in_app && !prefs.channels.whatsapp;
   const smsBlocked = !user.mobile_verified;
   const savedPlace = prefs.location ? fromPanchangPlace(prefs.location) : null;
   const shownPlace = savedPlace ?? DEFAULT_PLACE;
@@ -281,6 +285,18 @@ export function ReminderPreferencesForm({
               </Link>
             )}
           </Row>
+          {/* Offered only when the server has a WhatsApp vendor configured. */}
+          {channels.data?.whatsapp && (
+            <Row
+              id="ch-whatsapp"
+              icon={<MessageCircle className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />}
+              title={tg('prefs.whatsapp')}
+              description={smsBlocked ? t('channel.smsNeedsMobile') : tg('prefs.whatsappHint')}
+              checked={!!prefs.channels.whatsapp}
+              onChange={(on) => setChannel('whatsapp', on)}
+              disabled={smsBlocked && !prefs.channels.whatsapp}
+            />
+          )}
         </ul>
         {noChannel && (
           <p role="status" className="mt-3 rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
