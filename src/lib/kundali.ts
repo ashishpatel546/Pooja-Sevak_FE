@@ -233,7 +233,7 @@ export type MilanReport = {
   verdict: 'excellent' | 'good' | 'average' | 'low';
   boy: MoonSummary;
   girl: MoonSummary;
-  manglik: { boy: ManglikInfo; girl: ManglikInfo; match: 'none' | 'balanced' | 'mild' | 'attention' };
+  manglik: { boy: ManglikInfo; girl: ManglikInfo; match: 'none' | 'balanced' | 'partly_balanced' | 'mild' | 'attention' };
   boy_kundali: Kundali;
   girl_kundali: Kundali;
 };

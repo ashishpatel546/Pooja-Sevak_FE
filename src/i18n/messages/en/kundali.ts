@@ -558,6 +558,8 @@ const kundali = {
   'milan.manglikState.present': 'Manglik',
   'milan.manglik.none': 'Neither chart has Mangal dosha.',
   'milan.manglik.balanced': 'Both charts are Manglik, so the dosha is balanced between them (dosha samya).',
+  'milan.manglik.partly_balanced':
+    'Both charts have Mangal dosha, but one fully and the other only mildly (anshik), so the dosha is only partly balanced (partial dosha samya). Families usually consult a pandit ji.',
   'milan.manglik.mild': 'One chart has a mild Mangal dosha. Families often consult a pandit about a simple remedy.',
   'milan.manglik.attention':
     'One chart is Manglik and the other is not. Tradition advises a pandit’s guidance and, often, a Mangal Shanti puja.',

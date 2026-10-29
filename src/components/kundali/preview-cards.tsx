@@ -28,7 +28,7 @@ export type MilanPreview = {
   max: 36;
   verdict: 'excellent' | 'good' | 'average' | 'low';
   kootas: { key: KootaKey; max: number; score: number; dosha: boolean; cancelled: boolean }[];
-  manglik: { boy: ManglikLevel; girl: ManglikLevel; match: 'none' | 'balanced' | 'mild' | 'attention' };
+  manglik: { boy: ManglikLevel; girl: ManglikLevel; match: 'none' | 'balanced' | 'partly_balanced' | 'mild' | 'attention' };
 };
 
 /** Only what the chart needs: no name or gender leaves the browser for a preview. */
