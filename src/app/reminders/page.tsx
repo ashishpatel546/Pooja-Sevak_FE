@@ -40,8 +40,9 @@ import { UpcomingTimeline } from '@/components/ritual/upcoming-timeline';
 import { useErrorText } from '@/components/ritual/use-error-text';
 import { PlaceSync } from '@/components/ritual/place-control';
 import { usePlace, usePlaceName, usePlaceSettled } from '@/components/ritual/use-place';
+import { FamilyPlanner, FamilyReminderSettingsSection } from '@/components/growth/family-planner';
 
-const TABS = ['upcoming', 'loved-ones', 'preferences'] as const;
+const TABS = ['upcoming', 'loved-ones', 'family', 'preferences'] as const;
 type Tab = (typeof TABS)[number];
 const isTab = (v: unknown): v is Tab => typeof v === 'string' && (TABS as readonly string[]).includes(v);
 const isObservanceKey = (v: unknown): v is ObservanceKey =>
@@ -76,6 +77,7 @@ function ListSkeleton({ rows = 3, className }: { rows?: number; className?: stri
 }
 
 function Smaran() {
+  const tg = useT('growth');
   const t = useT('reminders');
   const { locale } = useLocale();
   const errorText = useErrorText();
@@ -191,12 +193,15 @@ function Smaran() {
       </header>
 
       <Tabs value={tab} onValueChange={(v) => isTab(v) && changeTab(v)} className="gap-8">
-        <TabsList className="grid h-auto! w-full grid-cols-3 sm:inline-grid sm:w-auto">
+        <TabsList className="grid h-auto! w-full grid-cols-2 sm:inline-grid sm:w-auto sm:grid-cols-4">
           <TabsTrigger value="upcoming" className="min-h-11 px-3 sm:px-5">
             {t('tab.upcoming')}
           </TabsTrigger>
           <TabsTrigger value="loved-ones" className="min-h-11 px-3 sm:px-5">
             {t('tab.loved')}
+          </TabsTrigger>
+          <TabsTrigger value="family" className="min-h-11 px-3 sm:px-5">
+            {tg('family.title')}
           </TabsTrigger>
           <TabsTrigger value="preferences" className="min-h-11 px-3 sm:px-5">
             {t('tab.preferences')}
@@ -286,6 +291,10 @@ function Smaran() {
           <p className="mt-6 max-w-2xl text-sm text-muted-foreground">{t('loved.footnote')}</p>
         </TabsContent>
 
+        <TabsContent value="family" className="min-w-0 text-base">
+          {tab === 'family' && <FamilyPlanner token={token} />}
+        </TabsContent>
+
         <TabsContent value="preferences" className="min-w-0 text-base">
           {(prefs.loading && !prefs.data) || awaitingPlace ? (
             <ListSkeleton rows={3} />
@@ -304,6 +313,7 @@ function Smaran() {
               onAutoEnabled={() => router.replace('/reminders?tab=preferences', { scroll: false })}
             />
           )}
+          <FamilyReminderSettingsSection token={token} />
         </TabsContent>
       </Tabs>
 

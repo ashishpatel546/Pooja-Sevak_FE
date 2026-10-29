@@ -14,6 +14,7 @@ import { KulParichaySection } from './_components/kul-parichay';
 import { DeleteAccountSection } from './_components/delete-account';
 import { SessionsSection } from './_components/sessions';
 import { PhotoPicker } from '@/components/common/photo-picker';
+import { ReferCard } from '@/components/growth/refer-card';
 
 export default function AccountPage() {
   const t = useT('account');
@@ -100,6 +101,7 @@ function AccountSections({ user }: { user: AuthUser }) {
           <KulParichaySection token={token} />
         </div>
       )}
+      {showKul && token && <ReferCard token={token} />}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-dashed p-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="break-all text-muted-foreground">{t('signedInAs', { email: user.email })}</p>

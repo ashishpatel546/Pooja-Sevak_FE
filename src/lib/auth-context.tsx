@@ -29,6 +29,7 @@ import {
 } from './session';
 import { disablePush } from './push';
 import type { AuthResponse, AuthUser, Role } from './types';
+import { clearRef, readRef } from './referral';
 
 export type { Role, AuthUser } from './types';
 
@@ -217,10 +218,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup: AuthState['signup'] = async (data) => {
+    // A ?ref= code the visitor arrived with gives them the referral welcome coupon.
+    const ref = readRef();
     const res = await api<AuthResponse>('/auth/signup', {
       method: 'POST',
-      body: { ...data, preferred_language: locale },
+      body: { ...data, preferred_language: locale, ...(ref ? { ref } : {}) },
     });
+    if (ref) clearRef();
     adopt(res.user, res.access_token);
     return res.user;
   };

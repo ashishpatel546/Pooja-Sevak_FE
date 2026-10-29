@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/install-prompt";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { RefCapture } from "@/components/growth/ref-capture";
 import { I18nProvider } from "@/i18n/provider";
 import { getLocale, getT, messagesFor } from "@/i18n/server";
 import { NONCE_HEADER } from "@/lib/csp";
@@ -105,6 +106,7 @@ export default async function RootLayout({
               {children}
             </main>
             <SiteFooter />
+            <RefCapture />
           </AuthProvider>
           <Toaster position="top-center" richColors />
           <InstallPrompt />
