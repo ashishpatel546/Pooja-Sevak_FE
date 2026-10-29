@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Diya } from '@/components/brand/diya';
 import { useT } from '@/i18n';
+import { track } from '@/lib/analytics';
 
 const DISMISS_KEY = 'pwa_install_dismissed';
 
@@ -59,7 +60,8 @@ export function InstallPrompt() {
   const install = async () => {
     if (!deferredEvent) return;
     await deferredEvent.prompt();
-    await deferredEvent.userChoice;
+    const choice = await deferredEvent.userChoice;
+    if (choice.outcome === 'accepted') track('install_prompt_accepted');
     setDeferredEvent(null);
     dismiss();
   };

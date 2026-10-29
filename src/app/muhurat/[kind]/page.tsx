@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CloudOff, Info } from 'lucide-react';
 import { getLocale, getT } from '@/i18n/server';
-import { kindFromParam, kindRoute, MUHURAT_PUJA_SLUGS, pujaNamesOf, yearsLabel, DELHI } from '@/lib/muhurat';
+import { DELHI, kindFromParam, kindRoute, pujaNamesOf, pujasFor, yearsLabel, type MuhuratDay, type MuhuratKind } from '@/lib/muhurat';
+import { fetchMuhuratDates } from '@/lib/muhurat-server';
 import { todayIst } from '@/lib/rashifal';
 import { fetchCatalogList } from '@/lib/seo/data';
 import { publicMetadata } from '@/lib/seo/metadata';
@@ -11,7 +12,6 @@ import { breadcrumbSchema } from '@/lib/seo/schema';
 import { JsonLd } from '@/components/seo/json-ld';
 import { BookPuja, MuhuratFinderBody } from '@/components/muhurat/muhurat-finder';
 import { KindLinks } from '@/components/muhurat/kind-links';
-import { fetchDelhiMuhurats, type ServerMuhuratDay } from '@/components/muhurat/muhurat-server';
 
 type Props = { params: Promise<{ kind: string }> };
 
@@ -34,7 +34,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const DAYS_SHOWN = 12;
 
-function DayList({ days, locale }: { days: ServerMuhuratDay[]; locale: 'hi' | 'en' }) {
+/** Dates for New Delhi from today; the start date is in the URL, so the cached list turns over daily. */
+async function delhiDays(kind: MuhuratKind, from: string, months: number) {
+  return (await fetchMuhuratDates(kind, months, DELHI, from))?.days ?? null;
+}
+
+function DayList({ days, locale }: { days: MuhuratDay[]; locale: 'hi' | 'en' }) {
   const intl = locale === 'hi' ? 'hi-IN' : 'en-IN';
   const dateFmt = new Intl.DateTimeFormat(intl, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   const timeFmt = new Intl.DateTimeFormat(intl, { hour: 'numeric', minute: '2-digit', timeZone: DELHI.tz });
@@ -67,14 +72,14 @@ export default async function MuhuratKindPage({ params }: Props) {
     getT('muhurat'),
     getT('seo'),
     fetchCatalogList(),
-    fetchDelhiMuhurats(kind, today, 3),
+    delhiDays(kind, today, 3),
   ]);
   // Nothing in three months (e.g. upanayan outside its months): look a year ahead.
-  const later = soon && soon.length === 0 ? await fetchDelhiMuhurats(kind, today, 12) : null;
+  const later = soon && soon.length === 0 ? await delhiDays(kind, today, 12) : null;
   const label = t(`kind.${kind}`);
   const pujaNames = pujaNamesOf(catalog);
-  const pujas = MUHURAT_PUJA_SLUGS[kind].filter((s) => pujaNames[s]).map((slug) => ({ slug, name: pujaNames[slug] }));
-  const place = locale === 'hi' ? DELHI.label_hi : DELHI.label;
+  const pujas = pujasFor(kind, pujaNames);
+  const place = (locale === 'hi' ? DELHI.label_hi : DELHI.label) ?? '';
 
   return (
     <>

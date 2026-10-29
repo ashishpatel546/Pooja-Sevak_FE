@@ -8,6 +8,7 @@ import { NavBar } from "@/components/nav-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/install-prompt";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { I18nProvider } from "@/i18n/provider";
 import { getLocale, getT, messagesFor } from "@/i18n/server";
 import { NONCE_HEADER } from "@/lib/csp";
@@ -74,7 +75,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = await getT("common");
-  // Per-request CSP nonce from src/proxy.ts, for next-themes' inline no-flash script.
+  // Per-request CSP nonce from src/proxy.ts, for next-themes' inline no-flash script and GA.
   const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
   return (
     // translate="no": the app has its own हिन्दी/English switch. Browser machine
@@ -107,6 +108,7 @@ export default async function RootLayout({
           </AuthProvider>
           <Toaster position="top-center" richColors />
           <InstallPrompt />
+          <GoogleAnalytics nonce={nonce} />
         </ThemeProvider>
         </I18nProvider>
       </body>

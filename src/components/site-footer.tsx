@@ -5,6 +5,7 @@ import { LanguageLinks } from '@/components/seo/language-links';
 
 export async function SiteFooter() {
   const t = await getT('nav');
+  const tt = await getT('tools');
   return (
     <footer className="sandhya relative mt-16 overflow-hidden print:hidden">
       <div className="toran" aria-hidden="true" />
@@ -26,6 +27,7 @@ export async function SiteFooter() {
             ['/panchang', t('footer.panchang')],
             ['/rashifal', t('footer.rashifal')],
             ['/kundali', t('footer.kundali')],
+            ['/kundali-milan', tt('footer.milan')],
             ['/muhurat', t('footer.muhurat')],
           ]}
         />

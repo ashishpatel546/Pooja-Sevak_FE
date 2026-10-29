@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -68,6 +68,7 @@ import { CustomerOnly } from '@/components/customer/wrong-role';
 import { localized } from '@/components/ritual/observance';
 import { usePanchangText } from '@/components/ritual/use-panchang-text';
 import { useErrorText } from '@/components/ritual/use-error-text';
+import { track } from '@/lib/analytics';
 
 type Service = PanditPublic['services'][number];
 const DAYS = 21;
@@ -171,6 +172,10 @@ function Wizard({
   const savedLocation = useSavedLocation();
   const foreignTz = useForeignTimeZone();
   const { pay, paying, paymentDialog } = usePayment();
+  const pujaSlug = def?.slug;
+  useEffect(() => {
+    track('booking_started', { puja: pujaSlug, kind: initialType });
+  }, [pujaSlug, initialType]);
 
   const canOnline = !!pandit.offers_online && !!def?.supports_online;
   const hasLighter =
@@ -409,6 +414,12 @@ function Wizard({
     try {
       const result = await pay({ id: booking.id, description: t('pay.description', { puja: pujaName, pandit: pandit.name }) });
       if (result.status === 'paid') {
+        track('booking_paid', {
+          puja: pujaSlug,
+          kind: booking.booking_type,
+          value: Number(booking.total_amount) || undefined,
+          currency: 'INR',
+        });
         toast.success(t('toast.paid'));
         router.push(`/bookings/${booking.id}?new=1`);
       } else {

@@ -2,9 +2,12 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Pooja Sevak',
-    short_name: 'Pooja Sevak',
-    description: 'Book trusted, verified pandits for home and online poojas.',
+    // Bilingual: the app is Hindi-first, and the install sheet should read in both scripts.
+    name: 'पूजा सेवक — Pooja Sevak',
+    short_name: 'पूजा सेवक',
+    description:
+      'सत्यापित पंडित जी, घर पर या ऑनलाइन पूजा, मुफ़्त कुंडली, मुहूर्त और पंचांग। Verified pandits for home and online pujas, with free kundali, muhurat and panchang.',
+    lang: 'hi',
     start_url: '/',
     display: 'standalone',
     background_color: '#fffaf3',
