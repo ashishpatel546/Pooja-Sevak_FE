@@ -2,63 +2,27 @@ import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
 
-function originOf(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return null;
-  }
-}
-
 // Browser API calls go to "/v1" on this site and are proxied to the backend
 // (see rewrites below), so they are same-origin and never need CORS. An
 // absolute NEXT_PUBLIC_API_URL (a separate API host) still works.
-const apiOrigin = originOf(process.env.NEXT_PUBLIC_API_URL);
 const backendApi = (process.env.API_INTERNAL_URL ?? "http://localhost:6001/v1").replace(/\/$/, "");
 
-// Profile photos: /v1/media/avatars/... (same-origin) answers with a 302 to a
-// short-lived presigned URL on the private S3 bucket, so the bucket host must
-// be an allowed image source. MEDIA_IMG_ORIGIN overrides it (e.g. a CDN later).
-const mediaImgOrigin =
-  originOf(process.env.MEDIA_IMG_ORIGIN) ?? "https://pooja-sevak-dev-media-aps1.s3.ap-south-1.amazonaws.com";
-
 /**
- * Enforced CSP: only directives that are safe without per-request nonces
- * (clickjacking, <base> hijacking, plugins, form targets).
+ * Baseline CSP for every response (API proxy, files). Pages get the full nonce-based
+ * policy from src/proxy.ts (src/lib/csp.ts); a page carrying both is held to both,
+ * and these directives are all part of the full one.
  */
-const enforcedCsp = [
+const baselineCsp = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",
   "form-action 'self'",
 ].join("; ");
 
-/**
- * Full policy in report-only mode: Next.js injects inline bootstrap scripts,
- * so a strict script-src needs nonces (proxy + dynamic rendering). Until then
- * violations are only reported to the console, never blocked.
- */
-const reportOnlyCsp = [
-  "default-src 'self'",
-  // 'wasm-unsafe-eval' lets the PDF viewer compile pdf.js' WebAssembly decoders (no JS eval).
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isProd ? "" : " 'unsafe-eval'"} https://checkout.razorpay.com`,
-  "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${mediaImgOrigin} https:`,
-  "font-src 'self' data:",
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.razorpay.com https://lumberjack.razorpay.com${isProd ? "" : " ws: wss:"}`,
-  "frame-src https://api.razorpay.com https://checkout.razorpay.com",
-  // pdf.js (samagri list viewer) runs in a module worker bundled under /_next
-  // ('self'); blob: covers its fallback of starting the worker from a Blob.
-  // The PDF bytes are fetched same-origin (/v1/media/samagri/.../raw), so
-  // connect-src needs no bucket host; rendered pages are blob: images.
-  "worker-src 'self' blob:",
-  "manifest-src 'self'",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "form-action 'self'",
-].join("; ");
+// Stage and preview builds must stay out of search engines: only a production build
+// with NEXT_PUBLIC_INDEXABLE=true is indexable (also read by robots.ts and the root layout).
+const indexable = process.env.NEXT_PUBLIC_INDEXABLE === "true";
+const NOINDEX_HEADER = { key: "X-Robots-Tag", value: "noindex, nofollow" };
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -75,8 +39,8 @@ const securityHeaders = [
       "browsing-topics=()",
     ].join(", "),
   },
-  { key: "Content-Security-Policy", value: enforcedCsp },
-  { key: "Content-Security-Policy-Report-Only", value: reportOnlyCsp },
+  { key: "Content-Security-Policy", value: baselineCsp },
+  ...(indexable ? [] : [NOINDEX_HEADER]),
   ...(isProd
     ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
     : []),
@@ -94,6 +58,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The renderer's print page holds a private report behind a token in the URL.
+      { source: "/kundali/print/:path*", headers: [NOINDEX_HEADER] },
       // Browsers must see a new service worker as soon as it ships.
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "private, no-cache, max-age=0" }] },
       // Dev bundles keep their file names between rebuilds. Cloudflare's Browser

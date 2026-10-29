@@ -7,7 +7,7 @@ import { ArrowLeft, Download, HandHeart, ScrollText } from 'lucide-react';
 import { useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import { setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { canMakeReports, setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/common/empty-state';
@@ -67,7 +67,7 @@ function Segmented<T extends string>({
 export default function KundaliReportPage() {
   const { id } = useParams<{ id: string }>();
   const ts = useT('kundali'); // site language, for the page chrome before a report loads
-  const { ready, token } = useRequireAuth();
+  const { ready, token, user } = useRequireAuth();
   // ?booking= opens a kundali a family attached to a booking (read-only, for its pandit).
   const booking = useSearchParams().get('booking');
   const router = useRouter();
@@ -75,7 +75,9 @@ export default function KundaliReportPage() {
     !ready ? null : booking ? `/kundali/bookings/${booking}/report` : `/kundali/reports/${id}`,
     { token },
   );
-  const exhausted = report.status === 403;
+  // 403 is either an unverified account (no report opens yet) or a used-up monthly quota.
+  const unverified = report.status === 403 && !!user && !canMakeReports(user);
+  const exhausted = report.status === 403 && !unverified;
   const quota = useApiQuery<KundaliQuota>(ready && exhausted ? '/kundali/quota' : null, { token });
 
   const [lang, setLang] = useState<Locale | null>(null);
@@ -157,6 +159,24 @@ export default function KundaliReportPage() {
   );
 
   if (!report.data) {
+    if (unverified) {
+      return (
+        <PageShell size="narrow">
+          {back}
+          <EmptyState
+            icon={ScrollText}
+            title={ts('verify.title')}
+            action={
+              <Button render={<Link href={`/verify-mobile?next=${encodeURIComponent(`/kundali/${id}`)}`} />} nativeButton={false}>
+                {ts('verify.mobile')}
+              </Button>
+            }
+          >
+            {ts('verify.text')}
+          </EmptyState>
+        </PageShell>
+      );
+    }
     if (exhausted) {
       return (
         <PageShell size="narrow">
