@@ -31,7 +31,8 @@ const tools = {
   'tool.milan.name': 'Kundali Milan',
   'tool.milan.text': 'Ashtakoot guna milan out of 36, with Manglik and Nadi checks',
   'tool.muhurat.name': 'Shubh Muhurat',
-  'tool.muhurat.text': 'Wedding and griha pravesh dates, choghadiya and Rahu kaal',
+  'tool.muhurat.text':
+    'Dates for weddings, griha pravesh, mundan and more, plus choghadiya and Rahu kaal',
   'tool.panchang.name': 'Aaj ka Panchang',
   'tool.panchang.text': 'Tithi, nakshatra, vrat and festivals for your city',
   'tool.rashifal.name': 'Rashifal',

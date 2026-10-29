@@ -31,7 +31,8 @@ const tools: Record<keyof typeof en, string> = {
   'tool.milan.name': 'कुंडली मिलान',
   'tool.milan.text': '36 में से अष्टकूट गुण मिलान, मांगलिक और नाड़ी जाँच सहित',
   'tool.muhurat.name': 'शुभ मुहूर्त',
-  'tool.muhurat.text': 'विवाह व गृह प्रवेश की तिथियाँ, चौघड़िया और राहु काल',
+  'tool.muhurat.text':
+    'विवाह, गृह प्रवेश, मुंडन व अन्य शुभ कार्यों की तिथियाँ, चौघड़िया और राहु काल',
   'tool.panchang.name': 'आज का पंचांग',
   'tool.panchang.text': 'आपके शहर की तिथि, नक्षत्र, व्रत और त्योहार',
   'tool.rashifal.name': 'राशिफल',
