@@ -9,8 +9,11 @@ import { useLocale, useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { displayName,
+import { canMakeReports,
+  displayName,
+  IP_DAILY_LIMIT,
   QUOTA_EXHAUSTED,
+  VERIFICATION_REQUIRED,
   type KindQuota,
   type KundaliKind,
   type KundaliQuota,
@@ -117,6 +120,26 @@ function QuotaNote({ kind, quota }: { kind: KundaliKind; quota: KundaliQuota | u
         {t.plural(kind === 'kundali' ? 'quota.kundaliLeft' : 'quota.milanLeft', q.remaining ?? 0)}
       </p>
       <p className="mt-1 text-muted-foreground">{t('quota.how')}</p>
+    </div>
+  );
+}
+
+/** Shown until the account has a verified mobile or email (the API refuses reports before that). */
+function VerifyNote({ next, onLeave }: { next: string; onLeave: () => void }) {
+  const t = useT('kundali');
+  const back = encodeURIComponent(next);
+  return (
+    <div role="status" className="rounded-xl border border-diya/50 bg-chandan/60 p-4">
+      <p className="font-medium">{t('verify.title')}</p>
+      <p className="mt-1 text-sm">{t('verify.text')}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button render={<Link href={`/verify-mobile?next=${back}`} onClick={onLeave} />} nativeButton={false}>
+          {t('verify.mobile')}
+        </Button>
+        <Button variant="outline" render={<Link href="/verify-email" onClick={onLeave} />} nativeButton={false}>
+          {t('verify.email')}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -266,6 +289,8 @@ function KundaliHub() {
   }, []);
 
   const quota = useApiQuery<KundaliQuota>(user && token ? '/kundali/quota' : null, { token });
+  const [needsVerify, setNeedsVerify] = useState(false);
+  const unverified = !!user && (needsVerify || !canMakeReports(user));
 
   const changeTab = (next: Tab) => {
     setTab(next);
@@ -299,6 +324,8 @@ function KundaliHub() {
     } catch (e) {
       const code = e instanceof ApiError ? (e.payload as { code?: string } | null)?.code : undefined;
       if (code === QUOTA_EXHAUSTED) quota.reload();
+      else if (code === VERIFICATION_REQUIRED) setNeedsVerify(true);
+      else if (code === IP_DAILY_LIMIT) toast.error(t('form.ipDailyLimit'));
       else toast.error(errorMessage(e, t('form.createError')));
       setBusy(false);
     }
@@ -307,14 +334,21 @@ function KundaliHub() {
   const submitBar = (kind: 'kundali' | 'milan') => (
     <div className="grid gap-4 border-t pt-5">
       <LanguageChoice value={language} onChange={setLanguage} />
-      {user && <QuotaNote kind={kind} quota={quota.data} />}
+      {unverified ? (
+        <VerifyNote
+          next={`/kundali?tab=${kind}`}
+          onLeave={() => writeDraft({ tab: kind, person, boy, girl, language })}
+        />
+      ) : (
+        user && <QuotaNote kind={kind} quota={quota.data} />
+      )}
       {!loading && !user && (
         <div className="rounded-xl bg-accent/40 p-4">
           <p className="font-medium">{t('form.signInTitle')}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t('form.signInText')}</p>
         </div>
       )}
-      <Button type="submit" size="lg" className="w-full sm:w-auto sm:justify-self-start" disabled={busy}>
+      <Button type="submit" size="lg" className="w-full sm:w-auto sm:justify-self-start" disabled={busy || unverified}>
         {busy
           ? t('form.preparing')
           : !user && !loading
