@@ -1,9 +1,11 @@
 import type { MetadataRoute } from 'next';
-import { SITE_URL } from '@/lib/seo/site';
+import { INDEXABLE, SITE_URL } from '@/lib/seo/site';
 
 // Private areas are also marked noindex in their layouts; this keeps crawlers
 // from spending time on them. Keep in step with the NOINDEX layouts.
 export default function robots(): MetadataRoute.Robots {
+  // Stage / preview builds: keep every crawler out (see INDEXABLE).
+  if (!INDEXABLE) return { rules: { userAgent: '*', disallow: '/' } };
   return {
     rules: {
       userAgent: '*',
