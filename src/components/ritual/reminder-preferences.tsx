@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BellRing, Check, Loader2, Mail, MessageSquareText, Smartphone } from 'lucide-react';
+import { BellRing, Check, Loader2, Mail, MessageSquareText, Smartphone, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { useT } from '@/i18n';
+import { useLocale, useT } from '@/i18n';
 import type { Messages } from '@/i18n/messages';
 import { api } from '@/lib/api';
 import { DEFAULT_PLACE, fromPanchangPlace, toPanchangPlace, type Place } from '@/lib/place';
 import type { AuthUser, ObservanceKey, ReminderChannels, ReminderPreferences } from '@/lib/types';
+import { RASHIS, rashiBySlug, rashiName, type MyRashi, type RashiSlug } from '@/lib/rashifal';
 import { cn } from '@/lib/utils';
+import { useApiQuery } from '@/components/customer/use-api';
+import { selectClass } from '@/components/kundali/birth-fields';
 import { Switch } from '@/components/dashboard/switch';
 import { ChoiceChips } from './choice-chips';
 import { ObservanceIcon } from './observance-icon';
@@ -96,7 +99,9 @@ export function ReminderPreferencesForm({
   onAutoEnabled?: () => void;
 }) {
   const t = useT('reminders');
+  const { locale } = useLocale();
   const { typeName } = usePanchangText();
+  const myRashi = useApiQuery<MyRashi>('/rashifal/me', { token });
   const errorText = useErrorText();
   const placeName = usePlaceName();
   const autoAdd = !!remindKey && !initial.observances.includes(remindKey);
@@ -171,6 +176,9 @@ export function ReminderPreferencesForm({
     update({ channels: { ...prefs.channels, [key]: on } });
 
   const noChannel = !prefs.channels.email && !prefs.channels.sms && !prefs.channels.in_app;
+  const rashifal = prefs.daily_rashifal ?? { enabled: false, sign: null };
+  const kundaliRashi = rashiBySlug(myRashi.data?.kundali_sign);
+  const setRashifal = (patch: Partial<typeof rashifal>) => update({ daily_rashifal: { ...rashifal, ...patch } });
   const smsBlocked = !user.mobile_verified;
   const savedPlace = prefs.location ? fromPanchangPlace(prefs.location) : null;
   const shownPlace = savedPlace ?? DEFAULT_PLACE;
@@ -215,6 +223,71 @@ export function ReminderPreferencesForm({
               highlight={remindKey === key}
             />
           ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="prefs-rashifal" className="min-w-0">
+        <h2 id="prefs-rashifal" className="text-2xl">
+          {t('rashifal.title')}
+        </h2>
+        <p className="mt-1 text-muted-foreground">{t('rashifal.intro')}</p>
+        <ul className="mt-4 rounded-2xl border bg-card">
+          <Row
+            id="daily-rashifal"
+            icon={<Sparkles className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />}
+            title={t('rashifal.switch')}
+            description={t('rashifal.switchHelp')}
+            checked={rashifal.enabled}
+            onChange={(on) => setRashifal({ enabled: on })}
+          >
+            {rashifal.enabled && (
+              <div className="mt-3 grid max-w-xs gap-1.5">
+                <label htmlFor="daily-rashifal-sign" className="text-sm font-medium">
+                  {t('rashifal.sign')}
+                </label>
+                <select
+                  id="daily-rashifal-sign"
+                  className={selectClass}
+                  value={rashifal.sign ?? ''}
+                  onChange={(e) =>
+                    setRashifal({ sign: (rashiBySlug(e.target.value)?.slug as RashiSlug | undefined) ?? null })
+                  }
+                >
+                  <option value="">
+                    {kundaliRashi
+                      ? t('rashifal.fromKundali', { sign: rashiName(kundaliRashi, locale) })
+                      : t('rashifal.pickSign')}
+                  </option>
+                  {RASHIS.map((r) => (
+                    <option key={r.slug} value={r.slug}>
+                      {r.glyph} {rashiName(r, locale)}
+                    </option>
+                  ))}
+                </select>
+                {!rashifal.sign && !kundaliRashi && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('rashifal.needSign')}{' '}
+                    <Link href="/kundali" className="font-medium text-primary underline-offset-4 hover:underline">
+                      {t('rashifal.makeKundali')}
+                    </Link>
+                  </p>
+                )}
+                {!prefs.channels.in_app && (
+                  <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+                    {t('rashifal.needInApp', { channel: t('channel.in_app') })}
+                  </p>
+                )}
+                {(rashifal.sign ?? kundaliRashi?.slug) && (
+                  <Link
+                    href={`/rashifal/${rashifal.sign ?? kundaliRashi?.slug}`}
+                    className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {t('rashifal.read')}
+                  </Link>
+                )}
+              </div>
+            )}
+          </Row>
         </ul>
       </section>
 

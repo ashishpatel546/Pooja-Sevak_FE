@@ -24,6 +24,7 @@ export async function SiteFooter() {
             ['/browse', t('footer.pandits')],
             ['/online', t('footer.online')],
             ['/panchang', t('footer.panchang')],
+            ['/rashifal', t('footer.rashifal')],
             ['/kundali', t('footer.kundali')],
             ['/muhurat', t('footer.muhurat')],
           ]}

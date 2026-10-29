@@ -30,6 +30,7 @@ type LinkKey =
   | 'link.browse'
   | 'link.online'
   | 'link.panchang'
+  | 'link.rashifal'
   | 'link.kundali'
   | 'link.muhurat'
   | 'link.reminders'
@@ -52,6 +53,7 @@ function linksFor(role: Role | undefined): NavLink[] {
     { href: '/browse', label: 'link.browse' },
     { href: '/online', label: 'link.online' },
     { href: '/panchang', label: 'link.panchang' },
+    { href: '/rashifal', label: 'link.rashifal' },
     { href: '/kundali', label: 'link.kundali' },
     { href: '/muhurat', label: 'link.muhurat' },
   ];

@@ -1,4 +1,5 @@
 // Shared API shapes. Field names match the backend (see docs/API.md).
+import type { RashiSlug } from './rashifal';
 
 export type Role = 'admin' | 'pandit' | 'customer';
 export type Coordinates = { lat: number; lng: number };
@@ -836,6 +837,8 @@ export type ReminderPreferences = {
   observances: ObservanceKey[];
   remind_days_before: number; // for observances; 0 = on the day
   channels: ReminderChannels;
+  /** Opt-in daily rashifal; sign null = the moon sign of the latest kundali. */
+  daily_rashifal?: { enabled: boolean; sign: RashiSlug | null };
 };
 
 export type UpcomingReminder = {
