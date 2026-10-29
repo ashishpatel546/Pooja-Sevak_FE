@@ -7,7 +7,8 @@ import { ArrowLeft, Download, HandHeart, ScrollText } from 'lucide-react';
 import { useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import { setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { isMilan, setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { track } from '@/lib/analytics';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/common/empty-state';
@@ -20,6 +21,9 @@ import { EditNamesButton } from '@/components/kundali/hindi-names';
 import { PdfActions } from '@/components/kundali/pdf-actions';
 import { ReportDocument } from '@/components/kundali/report-document';
 import { fmtCivilDate, useReportT } from '@/components/kundali/report-kit';
+import { PushPrePrompt } from '@/components/notifications/push-preprompt';
+import { MilanShare } from '@/components/share/milan-share';
+import { DoshaRemedies, MilanNextSteps } from '@/components/tools/next-steps';
 
 const STYLE_KEY = 'ps_chart_style';
 
@@ -102,6 +106,12 @@ export default function KundaliReportPage() {
       window.removeEventListener('afterprint', after);
     };
   }, []);
+
+  const openedId = report.data?.id;
+  const openedKind = report.data ? (isMilan(report.data.result) ? 'milan' : 'kundali') : null;
+  useEffect(() => {
+    if (openedId && openedKind && !booking) track('report_opened', { tool: openedKind });
+  }, [openedId, openedKind, booking]);
 
   const reportLang: Locale = lang ?? report.data?.language ?? 'hi';
   const t = useReportT(reportLang);
@@ -229,6 +239,7 @@ export default function KundaliReportPage() {
               size="lg"
               variant="outline"
               onClick={() => {
+                track('ask_pandit_clicked', { source: isMilan(r.result) ? 'milan' : 'kundali' });
                 setAttachedKundali(r.id);
                 router.push('/browse');
               }}
@@ -258,6 +269,20 @@ export default function KundaliReportPage() {
       </div>
 
       <ReportDocument r={r} lang={reportLang} t={t} chartStyle={chartStyle} />
+
+      {!booking && (
+        <div className="mt-8 grid gap-6 print:hidden">
+          {isMilan(r.result) ? (
+            <>
+              <MilanShare score={r.result.total} kootas={r.result.kootas} />
+              <MilanNextSteps />
+            </>
+          ) : (
+            <DoshaRemedies doshas={r.result.doshas} />
+          )}
+          <PushPrePrompt source={isMilan(r.result) ? 'milan' : 'kundali'} />
+        </div>
+      )}
     </PageShell>
   );
 }
