@@ -46,6 +46,7 @@ import { FestivalMonth } from '@/components/home/festival-month';
 import { PanchangGlance } from '@/components/home/panchang-glance';
 import { SacredPlans, type PujaPrices } from '@/components/home/sacred-plans';
 import { JsonLd } from '@/components/seo/json-ld';
+import { ToolCards } from '@/components/tools/tool-links';
 import { publicMetadata } from '@/lib/seo/metadata';
 import { organizationSchema, websiteSchema } from '@/lib/seo/schema';
 import { getSiteInfo } from '@/lib/business-profile';
@@ -323,6 +324,9 @@ export default async function Home() {
           })}
         </ul>
       </section>
+
+      {/* Free jyotish tools: kundali, milan, muhurat, panchang, rashifal */}
+      <FreeTools />
 
       {/* Sacred days ahead, each with its pujas — hidden when the panchang is unavailable */}
       {plans.length > 0 && (
@@ -645,5 +649,24 @@ function MantraBlock({ mantra, label, className }: { mantra: Mantra; label: stri
         ))}
       </blockquote>
     </figure>
+  );
+}
+
+async function FreeTools() {
+  const [t, locale] = await Promise.all([getT('tools'), getLocale()]);
+  return (
+    <section aria-labelledby="free-tools-title" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
+      <div className="max-w-2xl">
+        <p className="text-sm font-medium tracking-wide text-primary uppercase">{t('home.eyebrow')}</p>
+        <h2
+          id="free-tools-title"
+          className={cn('mt-2 text-4xl sm:text-5xl', locale === 'hi' ? 'leading-[1.3]' : 'leading-tight')}
+        >
+          {t('home.title')}
+        </h2>
+        <p className="mt-3 text-lg text-muted-foreground">{t('home.lead')}</p>
+      </div>
+      <ToolCards className="mt-8" />
+    </section>
   );
 }

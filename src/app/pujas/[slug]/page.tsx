@@ -8,6 +8,7 @@ import { excerpt, publicMetadata } from '@/lib/seo/metadata';
 import { breadcrumbSchema, pujaServiceSchema } from '@/lib/seo/schema';
 import { readBookingDate } from '@/lib/booking-date';
 import { PujaDetail } from '../_components/puja-detail';
+import { PujaTools } from '@/components/tools/puja-tools';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -82,6 +83,7 @@ export default async function PujaPage({ params, searchParams }: Props) {
         />
       )}
       <PujaDetail initial={puja} bookingDate={bookingDate} />
+      {puja && <PujaTools puja={puja} />}
     </>
   );
 }

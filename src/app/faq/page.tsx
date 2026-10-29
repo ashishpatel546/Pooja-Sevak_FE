@@ -13,6 +13,7 @@ const GROUPS = [
   { key: 'booking', ids: ['book', 'area', 'online', 'samagri', 'verify'] },
   { key: 'payment', ids: ['pay', 'cancel', 'refund'] },
   { key: 'calendar', ids: ['smaran', 'panchang'] },
+  { key: 'tools', ids: ['kundaliFree', 'kundaliMethod', 'milanScore', 'muhuratFinal', 'birthPrivacy'] },
   { key: 'pandits', ids: ['pandits', 'fee', 'join'] },
 ] as const;
 

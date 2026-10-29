@@ -61,6 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...localized('/pujas', { lastModified: now, changeFrequency: 'weekly', priority: 0.9 }),
     ...localized('/panchang', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
     ...localized('/kundali', { lastModified: now, changeFrequency: 'monthly', priority: 0.8 }),
+    ...localized('/kundali-milan', { lastModified: now, changeFrequency: 'monthly', priority: 0.8 }),
     ...localized('/muhurat', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
     ...localized('/online', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
     ...localized('/browse', { lastModified: now, changeFrequency: 'weekly', priority: 0.6 }),
