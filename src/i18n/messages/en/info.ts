@@ -112,6 +112,23 @@ const info = {
   'faq.group.calendar': 'Reminders and panchang',
   'faq.group.pandits': 'About our pandits',
 
+  'faq.group.tools': 'Kundali, milan and muhurat',
+  'faq.kundaliFree.q': 'Is the kundali really free?',
+  'faq.kundaliFree.a':
+    'Yes. The lagna, rashi, nakshatra and lagna chart are shown without signing in, and nothing is saved. The full report — dasha, doshas, yogas and a PDF — is free with a free account, with a few new reports each month. Make yours on the [Janam Kundali](/kundali) page.',
+  'faq.kundaliMethod.q': 'How is the kundali calculated?',
+  'faq.kundaliMethod.a':
+    'With the sidereal zodiac and Lahiri (Chitrapaksha) ayanamsa, whole-sign houses and Vimshottari dasha. Graha and lagna positions are checked against Swiss Ephemeris. An exact birth time gives an exact lagna.',
+  'faq.milanScore.q': 'How many gunas should match in kundali milan?',
+  'faq.milanScore.a':
+    'Tradition accepts 18 or more of the 36 gunas, and Nadi, Bhakoot and Manglik dosha are read alongside the score. The result is for guidance only; please decide with a learned pandit ji. See [Kundali Milan](/kundali-milan).',
+  'faq.muhuratFinal.q': 'Can I fix a wedding or griha pravesh date from the muhurat list?',
+  'faq.muhuratFinal.a':
+    'Use the [muhurat finder](/muhurat) to shortlist dates for your city. Your pandit ji fixes the final muhurat, also reading both kundalis and the lagna for the ceremony.',
+  'faq.birthPrivacy.q': 'Are my birth details kept private?',
+  'faq.birthPrivacy.a':
+    'Yes. The quick preview is not saved at all. Full reports stay in your account, visible only to you (and to a pandit ji only if you attach one to a booking), and you can remove them at any time.',
+
   'faq.book.q': 'How do I book a puja?',
   'faq.book.a':
     'Choose a puja from [All pujas](/pujas), pick a verified pandit who serves your address (or performs it online), select a date and time, add your sankalp details and pay online. Your booking is confirmed as soon as the payment succeeds. Pujas must be booked at least 2 hours in advance.',

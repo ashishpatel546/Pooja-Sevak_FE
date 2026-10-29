@@ -7,7 +7,8 @@ import { ArrowLeft, Download, HandHeart, ScrollText } from 'lucide-react';
 import { useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { api } from '@/lib/api';
-import { setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { canMakeReports, isMilan, setAttachedKundali, type KundaliQuota, type KundaliReportView } from '@/lib/kundali';
+import { track } from '@/lib/analytics';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/common/empty-state';
@@ -20,6 +21,9 @@ import { EditNamesButton } from '@/components/kundali/hindi-names';
 import { PdfActions } from '@/components/kundali/pdf-actions';
 import { ReportDocument } from '@/components/kundali/report-document';
 import { fmtCivilDate, useReportT } from '@/components/kundali/report-kit';
+import { PushPrePrompt } from '@/components/notifications/push-preprompt';
+import { MilanShare } from '@/components/share/milan-share';
+import { DoshaRemedies, MilanNextSteps } from '@/components/tools/next-steps';
 
 const STYLE_KEY = 'ps_chart_style';
 
@@ -67,7 +71,7 @@ function Segmented<T extends string>({
 export default function KundaliReportPage() {
   const { id } = useParams<{ id: string }>();
   const ts = useT('kundali'); // site language, for the page chrome before a report loads
-  const { ready, token } = useRequireAuth();
+  const { ready, token, user } = useRequireAuth();
   // ?booking= opens a kundali a family attached to a booking (read-only, for its pandit).
   const booking = useSearchParams().get('booking');
   const router = useRouter();
@@ -75,7 +79,9 @@ export default function KundaliReportPage() {
     !ready ? null : booking ? `/kundali/bookings/${booking}/report` : `/kundali/reports/${id}`,
     { token },
   );
-  const exhausted = report.status === 403;
+  // 403 is either an unverified account (no report opens yet) or a used-up monthly quota.
+  const unverified = report.status === 403 && !!user && !canMakeReports(user);
+  const exhausted = report.status === 403 && !unverified;
   const quota = useApiQuery<KundaliQuota>(ready && exhausted ? '/kundali/quota' : null, { token });
 
   const [lang, setLang] = useState<Locale | null>(null);
@@ -102,6 +108,12 @@ export default function KundaliReportPage() {
       window.removeEventListener('afterprint', after);
     };
   }, []);
+
+  const openedId = report.data?.id;
+  const openedKind = report.data ? (isMilan(report.data.result) ? 'milan' : 'kundali') : null;
+  useEffect(() => {
+    if (openedId && openedKind && !booking) track('report_opened', { tool: openedKind });
+  }, [openedId, openedKind, booking]);
 
   const reportLang: Locale = lang ?? report.data?.language ?? 'hi';
   const t = useReportT(reportLang);
@@ -157,6 +169,24 @@ export default function KundaliReportPage() {
   );
 
   if (!report.data) {
+    if (unverified) {
+      return (
+        <PageShell size="narrow">
+          {back}
+          <EmptyState
+            icon={ScrollText}
+            title={ts('verify.title')}
+            action={
+              <Button render={<Link href={`/verify-mobile?next=${encodeURIComponent(`/kundali/${id}`)}`} />} nativeButton={false}>
+                {ts('verify.mobile')}
+              </Button>
+            }
+          >
+            {ts('verify.text')}
+          </EmptyState>
+        </PageShell>
+      );
+    }
     if (exhausted) {
       return (
         <PageShell size="narrow">
@@ -229,6 +259,7 @@ export default function KundaliReportPage() {
               size="lg"
               variant="outline"
               onClick={() => {
+                track('ask_pandit_clicked', { source: isMilan(r.result) ? 'milan' : 'kundali' });
                 setAttachedKundali(r.id);
                 router.push('/browse');
               }}
@@ -258,6 +289,20 @@ export default function KundaliReportPage() {
       </div>
 
       <ReportDocument r={r} lang={reportLang} t={t} chartStyle={chartStyle} />
+
+      {!booking && (
+        <div className="mt-8 grid gap-6 print:hidden">
+          {isMilan(r.result) ? (
+            <>
+              <MilanShare score={r.result.total} kootas={r.result.kootas} />
+              <MilanNextSteps />
+            </>
+          ) : (
+            <DoshaRemedies doshas={r.result.doshas} shani={r.result.shani} />
+          )}
+          <PushPrePrompt source={isMilan(r.result) ? 'milan' : 'kundali'} />
+        </div>
+      )}
     </PageShell>
   );
 }

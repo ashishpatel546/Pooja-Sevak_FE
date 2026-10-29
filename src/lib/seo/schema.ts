@@ -192,3 +192,30 @@ export function faqPageSchema(
     })),
   };
 }
+
+/**
+ * A free web tool (kundali, milan, muhurat) as a WebApplication. Price 0: the tool
+ * is free to use (the full report needs a free account). No rating is claimed.
+ */
+export function webApplicationSchema(o: {
+  name: string;
+  description: string;
+  path: string;
+  locale: Locale;
+  brand: string;
+}): Thing {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: o.name,
+    description: o.description,
+    url: absoluteUrl(withLang(o.path, o.locale)),
+    applicationCategory: 'LifestyleApplication',
+    operatingSystem: 'Any',
+    browserRequirements: 'Requires JavaScript',
+    inLanguage: ['hi-IN', 'en-IN'],
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: 0, priceCurrency: 'INR' },
+    provider: { '@type': 'Organization', '@id': ORG_ID, name: o.brand, url: absoluteUrl('/') },
+  };
+}

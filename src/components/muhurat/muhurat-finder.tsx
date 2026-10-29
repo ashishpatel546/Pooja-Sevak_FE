@@ -1,12 +1,27 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { CalendarHeart, Home, Info, Sunrise } from 'lucide-react';
+import { CalendarHeart, CalendarSearch, HandHeart, Info, Sunrise } from 'lucide-react';
 import { useLocale, useT } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { INTL_LOCALE } from '@/i18n/config';
-import { placeQuery, type Place } from '@/lib/place';
+import { track } from '@/lib/analytics';
+import { isBookableDate } from '@/lib/booking-date';
+import {
+  kindRoute,
+  MUHURAT_KINDS,
+  pujaBookingHref,
+  pujasFor,
+  type Bilingual,
+  type MuhuratBlocked as Blocked,
+  type MuhuratDay,
+  type MuhuratKind as Kind,
+  type MuhuratSearch,
+  type MuhuratTab,
+  type PujaNames,
+} from '@/lib/muhurat';
+import { placeQuery, samePlace, type Place } from '@/lib/place';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,21 +33,13 @@ import { TimePicker } from '@/components/kundali/time-picker';
 import { fmtCivilDate, fmtTime } from '@/components/kundali/report-kit';
 import { PlaceControl, PlaceSync } from '@/components/ritual/place-control';
 import { usePlace, usePlaceName } from '@/components/ritual/use-place';
+import { PushPrePrompt } from '@/components/notifications/push-preprompt';
+import { ShareButtons } from '@/components/share/share-buttons';
 
-type Bilingual = { en: string; hi: string };
-type Kind = 'vivah' | 'griha_pravesh';
 type Iso = { start: string; end: string };
 
-type MuhuratDay = {
-  date: string;
-  weekday: number;
-  tithi_name: Bilingual;
-  nakshatra_name: Bilingual;
-  lunar_month: Bilingual;
-  windows: (Iso & { tithi_name: Bilingual; nakshatra_name: Bilingual })[];
-};
-type Blocked = { reason: 'chaturmas' | 'kharmas' | 'adhik' | 'guru_asta' | 'shukra_asta'; from: string; to: string };
-type MuhuratSearch = { kind: Kind; from: string; to: string; days: MuhuratDay[]; blocked: Blocked[] };
+/** Dates fetched on the server for the first render (the visitor's cookie place, or the default). */
+export type InitialDates = { kind: Kind; months: number; from: string | null; place: Place; data: MuhuratSearch };
 
 type Choghadiya = 'udveg' | 'char' | 'labh' | 'amrit' | 'kaal' | 'shubh' | 'rog';
 type DayMuhurat = {
@@ -112,15 +119,89 @@ function Failed({ retry }: { retry: () => void }) {
   );
 }
 
-// ───────────────────────── dates (vivah, griha pravesh) ─────────────────────────
+// ───────────────────────── dates for a kind ─────────────────────────
 
 type Row = { kind: 'day'; date: string; day: MuhuratDay } | { kind: 'blocked'; date: string; b: Blocked };
 
-function DateList({ kind, place }: { kind: Kind; place: Place }) {
+/** Choose what the muhurat is for: ten kinds, the chosen one described below. */
+function KindPicker({ kind, onChange }: { kind: Kind; onChange: (k: Kind) => void }) {
   const t = useT('muhurat');
+  const id = useId();
+  return (
+    <div className="grid gap-3">
+      <p id={`${id}-legend`} className="font-medium">
+        {t('kind.legend')}
+      </p>
+      <div role="radiogroup" aria-labelledby={`${id}-legend`} className="flex flex-wrap gap-2">
+        {MUHURAT_KINDS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="radio"
+            aria-checked={kind === k}
+            onClick={() => onChange(k)}
+            className={cn(
+              'min-h-11 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+              kind === k ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-primary/40 hover:bg-accent/40',
+            )}
+          >
+            {t(`kind.${k}`)}
+          </button>
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        {t(`kindDesc.${kind}`)}
+      </p>
+    </div>
+  );
+}
+
+function DateList({
+  kind,
+  place,
+  from,
+  pujaNames,
+  initial,
+}: {
+  kind: Kind;
+  place: Place;
+  from?: string | null;
+  pujaNames: PujaNames;
+  initial?: InitialDates | null;
+}) {
+  const t = useT('muhurat');
+  const tt = useT('tools');
+  const name = usePlaceName();
   const { locale: lang } = useLocale();
   const [months, setMonths] = useState<(typeof RANGES)[number]>(6);
-  const q = useApiQuery<MuhuratSearch>('/muhurat/dates', { query: { kind, months, ...placeQuery(place) } });
+  // Server-rendered dates stand in for the first query when they answer the same question.
+  const seeded =
+    initial &&
+    initial.kind === kind &&
+    initial.months === months &&
+    (initial.from ?? null) === (from ?? null) &&
+    samePlace(initial.place, place)
+      ? initial.data
+      : null;
+  const fetched = useApiQuery<MuhuratSearch>(seeded ? null : '/muhurat/dates', {
+    query: { kind, months, ...(from && { from }), ...placeQuery(place) },
+  });
+  const q = seeded ? { ...fetched, data: seeded, error: undefined } : fetched;
+  const pujas = pujasFor(kind, pujaNames);
+  const changeMonths = (m: (typeof RANGES)[number]) => {
+    setMonths(m);
+    track('tool_submit', { tool: 'muhurat', kind });
+  };
+  const shareText = q.data?.days.length
+    ? tt('share.muhuratText', {
+        kind: t(`kind.${kind}`),
+        place: name(place),
+        dates: q.data.days
+          .slice(0, 5)
+          .map((d) => fmtCivilDate(d.date, lang))
+          .join(', '),
+      })
+    : null;
 
   // Dates and whole blocked periods in one timeline, grouped by month.
   const rows: Row[] = q.data
@@ -146,7 +227,7 @@ function DateList({ kind, place }: { kind: Kind; place: Place }) {
               key={m}
               type="button"
               aria-pressed={months === m}
-              onClick={() => setMonths(m)}
+              onClick={() => changeMonths(m)}
               className={cn(
                 'min-h-10 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
                 months === m ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
@@ -158,10 +239,13 @@ function DateList({ kind, place }: { kind: Kind; place: Place }) {
         </div>
         {q.data && (
           <p className="text-muted-foreground" role="status">
-            {q.data.days.length ? t(`dates.count.${kind}`, { count: q.data.days.length }) : t('dates.none')}
+            {q.data.days.length
+              ? t('dates.countFor', { count: q.data.days.length, kind: t(`kind.${kind}`) })
+              : t('dates.none')}
           </p>
         )}
       </div>
+      {shareText && <ShareButtons text={shareText} path={`/muhurat/${kindRoute(kind)}`} source="muhurat" />}
 
       {q.error ? (
         <Failed retry={q.reload} />
@@ -209,6 +293,16 @@ function DateList({ kind, place }: { kind: Kind; place: Place }) {
                           </li>
                         ))}
                       </ul>
+                      {pujas[0] && (
+                        <Link
+                          href={pujaBookingHref(pujas[0].slug, r.date)}
+                          className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <HandHeart className="size-4" aria-hidden="true" />
+                          {/* Past the booking horizon the date is not carried, so do not promise it. */}
+                          {t(isBookableDate(r.date) ? 'book.forDay' : 'book.cta', { puja: pick(pujas[0].name, lang) })}
+                        </Link>
+                      )}
                     </div>
                   </li>
                 ),
@@ -225,7 +319,37 @@ function DateList({ kind, place }: { kind: Kind; place: Place }) {
           <p>{t('rules.common')}</p>
         </div>
       </details>
+
+      {pujas.length > 0 && <BookPuja kind={kind} pujas={pujas} />}
     </div>
+  );
+}
+
+/** "Book a pandit ji for your <kind>": one button per catalog puja for the kind. */
+export function BookPuja({ kind, pujas }: { kind: Kind; pujas: { slug: string; name: Bilingual }[] }) {
+  const t = useT('muhurat');
+  const { locale: lang } = useLocale();
+  return (
+    <section className="sandhya flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div>
+        <h3 className="text-2xl">{t('book.title', { kind: t(`kind.${kind}`) })}</h3>
+        <p className="mt-1">{t('book.text')}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {pujas.map((p, i) => (
+          <Button
+            key={p.slug}
+            size="lg"
+            variant={i === 0 ? 'default' : 'outline'}
+            className={i === 0 ? undefined : 'bg-transparent'}
+            render={<Link href={`/pujas/${p.slug}`} />}
+            nativeButton={false}
+          >
+            {t('book.cta', { puja: pick(p.name, lang) })}
+          </Button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -245,11 +369,11 @@ function Period({ label, children, tone }: { label: string; children: ReactNode;
   );
 }
 
-function DayView({ place }: { place: Place }) {
+function DayView({ place, initialDate }: { place: Place; initialDate?: string | null }) {
   const t = useT('muhurat');
   const { locale: lang } = useLocale();
   const id = useId();
-  const [date, setDate] = useState(() => todayIn(place.tz));
+  const [date, setDate] = useState(() => initialDate || todayIn(place.tz));
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const q = useApiQuery<DayMuhurat>(date ? '/muhurat/day' : null, {
@@ -273,7 +397,10 @@ function DayView({ place }: { place: Place }) {
             min="1901-01-01"
             max="2098-12-31"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => {
+              setDate(e.target.value);
+              track('tool_submit', { tool: 'muhurat', kind: 'day' });
+            }}
             className="h-11 text-base"
           />
         </div>
@@ -420,11 +547,93 @@ function DayView({ place }: { place: Place }) {
 
 // ───────────────────────── page body ─────────────────────────
 
-export function MuhuratFinder() {
+export type FinderInit = {
+  /** From `?kind=` or the /muhurat/[kind] route. */
+  kind?: Kind | null;
+  /** Which tab opens: the date list, or the one-day view (`?kind=day`). */
+  tab?: MuhuratTab;
+  /** From `?from=`: the first date to search from. */
+  from?: string | null;
+  /** From `?date=`: the day the one-day view opens on. */
+  date?: string | null;
+  /** Catalog puja names by slug, for "Book <puja>". */
+  pujaNames?: PujaNames;
+  /** Server-fetched dates for the first render. */
+  initial?: InitialDates | null;
+};
+
+/** Kind picker, date list and the one-day view, without the page hero. */
+export function MuhuratFinderBody({
+  kind: initialKind,
+  tab: initialTab = 'dates',
+  from,
+  date,
+  pujaNames = {},
+  initial = null,
+  syncUrl = false,
+  withPlace = false,
+}: FinderInit & { syncUrl?: boolean; withPlace?: boolean }) {
   const t = useT('muhurat');
   const place = usePlace();
   const name = usePlaceName();
-  const [tab, setTab] = useState<Kind | 'day'>('vivah');
+  const [tab, setTab] = useState<MuhuratTab>(initialTab);
+  const [kind, setKind] = useState<Kind>(initialKind ?? 'vivah');
+
+  // Keep the address shareable (?kind=) without a navigation.
+  const syncKind = (k: Kind | 'day') => {
+    if (!syncUrl) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('kind', k);
+    if (k !== 'day') url.searchParams.delete('date');
+    window.history.replaceState(window.history.state, '', url);
+  };
+  const chooseKind = (k: Kind) => {
+    setKind(k);
+    syncKind(k);
+    track('tool_submit', { tool: 'muhurat', kind: k });
+  };
+  const changeTab = (next: MuhuratTab) => {
+    setTab(next);
+    syncKind(next === 'day' ? 'day' : kind);
+    track('tool_submit', { tool: 'muhurat', kind: next === 'day' ? 'day' : kind });
+  };
+
+  return (
+    <Tabs value={tab} onValueChange={(v) => changeTab(v as MuhuratTab)} className="gap-8">
+      {withPlace && (
+        <>
+          <PlaceSync requested={place} refresh={false} />
+          <PlaceControl place={place} text={t('place.text', { place: name(place) })} />
+        </>
+      )}
+      <TabsList aria-label={t('tabs.label')} className="grid h-auto! w-full grid-cols-2 sm:inline-grid sm:w-auto">
+        <TabsTrigger value="dates" className="min-h-11 px-3 sm:px-5">
+          <CalendarSearch aria-hidden="true" className="hidden sm:inline" />
+          {t('tab.dates')}
+        </TabsTrigger>
+        <TabsTrigger value="day" className="min-h-11 px-3 sm:px-5">
+          <Sunrise aria-hidden="true" className="hidden sm:inline" />
+          {t('tab.day')}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="dates" className="grid gap-8">
+        <KindPicker kind={kind} onChange={chooseKind} />
+        <DateList kind={kind} place={place} from={from} pujaNames={pujaNames} initial={initial} />
+      </TabsContent>
+      <TabsContent value="day">
+        <DayView place={place} initialDate={date} />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+export function MuhuratFinder(init: FinderInit = {}) {
+  const t = useT('muhurat');
+  const place = usePlace();
+  const name = usePlaceName();
+  useEffect(() => {
+    track('tool_view', { tool: 'muhurat' });
+  }, []);
 
   return (
     <>
@@ -446,31 +655,9 @@ export function MuhuratFinder() {
       </section>
 
       <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as Kind | 'day')} className="gap-8">
-          <TabsList aria-label={t('tabs.label')} className="grid h-auto! w-full grid-cols-3 sm:inline-grid sm:w-auto">
-            <TabsTrigger value="vivah" className="min-h-11 px-3 sm:px-5">
-              <CalendarHeart aria-hidden="true" className="hidden sm:inline" />
-              {t('tab.vivah')}
-            </TabsTrigger>
-            <TabsTrigger value="griha_pravesh" className="min-h-11 px-3 sm:px-5">
-              <Home aria-hidden="true" className="hidden sm:inline" />
-              {t('tab.griha_pravesh')}
-            </TabsTrigger>
-            <TabsTrigger value="day" className="min-h-11 px-3 sm:px-5">
-              <Sunrise aria-hidden="true" className="hidden sm:inline" />
-              {t('tab.day')}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="vivah">
-            <DateList kind="vivah" place={place} />
-          </TabsContent>
-          <TabsContent value="griha_pravesh">
-            <DateList kind="griha_pravesh" place={place} />
-          </TabsContent>
-          <TabsContent value="day">
-            <DayView place={place} />
-          </TabsContent>
-        </Tabs>
+        <MuhuratFinderBody {...init} syncUrl />
+
+        <PushPrePrompt source="muhurat" className="mt-10" />
 
         <p className="mt-10 flex gap-3 rounded-2xl border border-diya/50 bg-chandan/60 p-4 sm:p-5">
           <Info className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />

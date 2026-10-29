@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Mukta, Tiro_Devanagari_Hindi } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
@@ -7,9 +8,12 @@ import { NavBar } from "@/components/nav-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/install-prompt";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { RefCapture } from "@/components/growth/ref-capture";
 import { I18nProvider } from "@/i18n/provider";
 import { getLocale, getT, messagesFor } from "@/i18n/server";
-import { SITE_URL } from "@/lib/seo/site";
+import { NONCE_HEADER } from "@/lib/csp";
+import { INDEXABLE, SITE_URL } from "@/lib/seo/site";
 
 const tiro = Tiro_Devanagari_Hindi({
   variable: "--font-tiro",
@@ -51,6 +55,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: { card: "summary_large_image", title, description },
     formatDetection: { telephone: false },
+    // Stage / preview builds: noindex everywhere (pages with their own robots stay noindex too).
+    ...(INDEXABLE ? {} : { robots: { index: false, follow: false } }),
   };
 }
 
@@ -70,6 +76,8 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = await getT("common");
+  // Per-request CSP nonce from src/proxy.ts, for next-themes' inline no-flash script and GA.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
   return (
     // translate="no": the app has its own हिन्दी/English switch. Browser machine
     // translation (Chrome's Google Translate) rewrites text nodes behind React's
@@ -91,16 +99,18 @@ export default async function RootLayout({
           {t("skipToContent")}
         </a>
         <I18nProvider locale={locale} messages={messagesFor(locale)}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange nonce={nonce}>
           <AuthProvider>
             <NavBar />
             <main id="main" className="flex-1">
               {children}
             </main>
             <SiteFooter />
+            <RefCapture />
           </AuthProvider>
           <Toaster position="top-center" richColors />
           <InstallPrompt />
+          <GoogleAnalytics nonce={nonce} />
         </ThemeProvider>
         </I18nProvider>
       </body>

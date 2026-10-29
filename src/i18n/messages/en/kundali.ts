@@ -1,9 +1,10 @@
 // English strings for the "kundali" namespace. Flat keys; {name} placeholders are interpolated.
 // Report pages render this namespace in the language chosen for the report, not the site language.
 const kundali = {
-  'meta.title': 'Janam Kundali and Kundali Milan in Hindi and English',
+  'meta.title':
+    'Free Janam Kundali Online — Kundli by Date of Birth',
   'meta.description':
-    'Prepare your janam kundali and kundali milan (36 guna matching) with precise astronomical calculation and Lahiri ayanamsa: lagna, nine grahas, nakshatra, Manglik dosha and Vimshottari dasha, in Hindi or English.',
+    'Free birth chart by date, time and place of birth: lagna, nine grahas, nakshatra, Manglik dosha and Vimshottari dasha. Precise Lahiri calculation, PDF download.',
   'meta.reportTitle': 'Your kundali',
 
   'hero.invocation': '॥ श्री गणेशाय नमः ॥',
@@ -88,6 +89,13 @@ const kundali = {
     'Your kundalis are kept safely in your account, so you can open them again whenever you need.',
   'form.signIn': 'Sign in to continue',
   'form.createError': 'The kundali could not be prepared just now. Please try once more.',
+  'form.ipDailyLimit': 'Many new kundalis have been prepared from this network today. Please try again tomorrow.',
+
+  'verify.title': 'Please verify your mobile number or email',
+  'verify.text':
+    'Free kundalis are prepared for verified accounts only. Verify either one, then come back here; your details stay filled in.',
+  'verify.mobile': 'Verify mobile number',
+  'verify.email': 'Verify email',
 
   'quota.kundaliLeft_one': '{count} free kundali left this month',
   'quota.kundaliLeft_other': '{count} free kundalis left this month',
@@ -550,6 +558,8 @@ const kundali = {
   'milan.manglikState.present': 'Manglik',
   'milan.manglik.none': 'Neither chart has Mangal dosha.',
   'milan.manglik.balanced': 'Both charts are Manglik, so the dosha is balanced between them (dosha samya).',
+  'milan.manglik.partly_balanced':
+    'Both charts have Mangal dosha, but one fully and the other only mildly (anshik), so the dosha is only partly balanced (partial dosha samya). Families usually consult a pandit ji.',
   'milan.manglik.mild': 'One chart has a mild Mangal dosha. Families often consult a pandit about a simple remedy.',
   'milan.manglik.attention':
     'One chart is Manglik and the other is not. Tradition advises a pandit’s guidance and, often, a Mangal Shanti puja.',

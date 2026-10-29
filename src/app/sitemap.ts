@@ -3,6 +3,8 @@ import { LOCALES } from '@/i18n/config';
 import { fetchCatalogList, fetchListedPandits } from '@/lib/seo/data';
 import { absoluteUrl, withLang } from '@/lib/seo/site';
 import { fetchBusinessProfile } from '@/lib/business-profile';
+import { kindRoute, MUHURAT_KINDS } from '@/lib/muhurat';
+import { RASHIS } from '@/lib/rashifal';
 
 // Regenerate hourly so new pujas and pandits appear without a rebuild.
 export const revalidate = 3600;
@@ -27,6 +29,16 @@ const FALLBACK_SLUGS = [
   'lakshmi-puja',
   'ganesh-puja',
   'pitru-paksha-shraddh',
+  'upanayan-sanskar',
+  'vahan-puja',
+  'vyapar-udghatan-puja',
+  'shani-shanti-puja',
+  'mangal-dosh-nivaran',
+  'tripindi-shraddh',
+  'akhand-ramayan-path',
+  'navratri-puja',
+  'karwa-chauth-puja',
+  'chhath-puja',
 ];
 
 const HREFLANG = { hi: 'hi-IN', en: 'en-IN' } as const;
@@ -61,7 +73,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...localized('/pujas', { lastModified: now, changeFrequency: 'weekly', priority: 0.9 }),
     ...localized('/panchang', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
     ...localized('/kundali', { lastModified: now, changeFrequency: 'monthly', priority: 0.8 }),
+    ...localized('/kundali-milan', { lastModified: now, changeFrequency: 'monthly', priority: 0.8 }),
     ...localized('/muhurat', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
+    ...MUHURAT_KINDS.flatMap((k) =>
+      localized(`/muhurat/${kindRoute(k)}`, { lastModified: now, changeFrequency: 'weekly', priority: 0.7 }),
+    ),
+    ...localized('/rashifal', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
+    ...RASHIS.flatMap((r) =>
+      localized(`/rashifal/${r.slug}`, { lastModified: now, changeFrequency: 'daily', priority: 0.7 }),
+    ),
     ...localized('/online', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
     ...localized('/browse', { lastModified: now, changeFrequency: 'weekly', priority: 0.6 }),
     ...localized('/about', { lastModified: now, changeFrequency: 'monthly', priority: 0.5 }),

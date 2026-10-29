@@ -233,7 +233,7 @@ export type MilanReport = {
   verdict: 'excellent' | 'good' | 'average' | 'low';
   boy: MoonSummary;
   girl: MoonSummary;
-  manglik: { boy: ManglikInfo; girl: ManglikInfo; match: 'none' | 'balanced' | 'mild' | 'attention' };
+  manglik: { boy: ManglikInfo; girl: ManglikInfo; match: 'none' | 'balanced' | 'partly_balanced' | 'mild' | 'attention' };
   boy_kundali: Kundali;
   girl_kundali: Kundali;
 };
@@ -256,6 +256,15 @@ export type KundaliQuota = { unlimited: boolean; resets_on: string; kundali: Kin
 
 /** API error code when the month's free reports are used up. */
 export const QUOTA_EXHAUSTED = 'kundali_quota_exhausted';
+/** API error code (403) until the account has a verified email or mobile number. */
+export const VERIFICATION_REQUIRED = 'kundali_verification_required';
+/** API error code (429) when one network has made too many new reports today. */
+export const IP_DAILY_LIMIT = 'kundali_ip_daily_limit';
+
+/** Free reports need a verified email or mobile (admins are exempt); mirrors the API check. */
+export function canMakeReports(user: { role: string; email_verified: boolean; mobile_verified: boolean }): boolean {
+  return user.role === 'admin' || user.email_verified || user.mobile_verified;
+}
 
 export function isMilan(r: Kundali | MilanReport): r is MilanReport {
   return 'kootas' in r;

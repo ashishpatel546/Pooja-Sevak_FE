@@ -8,7 +8,7 @@ The Next.js web app for **Pooja Sevak**, which lets a family book a verified pan
 | Port | **6002** |
 | Language | Hindi first (default), English on request |
 | Install | Installable PWA (manifest + service worker) |
-| Runtime | Node.js 22 |
+| Runtime | Node.js 26 (LTS) |
 
 > This Next.js version has breaking changes from older releases. Read the guides in `node_modules/next/dist/docs/` before changing routing, caching or config (see `AGENTS.md`).
 

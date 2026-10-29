@@ -22,6 +22,17 @@ type Kind = 'percent' | 'minutes' | 'raw';
 const kindOf = (key: string): Kind =>
   /commission/i.test(key) ? 'percent' : /buffer|minutes/i.test(key) ? 'minutes' : 'raw';
 
+/** Referral settings (growth namespace) have their own titles and descriptions. */
+const REFERRAL_KEYS = [
+  'referral_enabled',
+  'referral_reward_paise',
+  'referral_coupon_valid_days',
+  'referral_monthly_reward_cap',
+] as const;
+type ReferralKey = (typeof REFERRAL_KEYS)[number];
+const referralKey = (key: string): ReferralKey | null =>
+  (REFERRAL_KEYS as readonly string[]).includes(key) ? (key as ReferralKey) : null;
+
 const titleOf = (key: string, t: Translator<'admin'>) => {
   if (/commission/i.test(key)) return t('settings.commission.title');
   if (/buffer/i.test(key)) return t('settings.buffer.title');
@@ -96,8 +107,10 @@ function SettingRow({
 }) {
   const t = useT('admin');
   const tc = useT('common');
+  const tg = useT('growth');
   const kind = kindOf(setting.key);
-  const title = titleOf(setting.key, t);
+  const rk = referralKey(setting.key);
+  const title = rk ? tg(`settings.${rk}.title`) : titleOf(setting.key, t);
   const [value, setValue] = useState(toDisplay(kind, String(setting.value ?? "")));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -141,7 +154,7 @@ function SettingRow({
     <form onSubmit={save} noValidate className="rounded-2xl border bg-card p-5">
       <h2 className="text-xl leading-tight">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        {descriptionOf(setting, t)} <code className="text-xs break-all">{setting.key}</code>
+        {rk ? tg(`settings.${rk}.desc`) : descriptionOf(setting, t)} <code className="text-xs break-all">{setting.key}</code>
       </p>
       <div className="mt-4 grid gap-4">
         <Field

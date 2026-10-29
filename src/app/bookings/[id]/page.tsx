@@ -22,7 +22,7 @@ import { pick, useFormat, useT } from '@/i18n';
 import { buildIcs, downloadIcs } from '@/lib/ics';
 import type { Booking, Review } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { bookingFee, bookingSamagri, customerPayable } from '@/lib/customer-fee';
+import { bookingDiscount, bookingFee, bookingSamagri, customerPayable } from '@/lib/customer-fee';
 import { Diya } from '@/components/brand/diya';
 import { Mandala } from '@/components/brand/mandala';
 import { EmptyState } from '@/components/common/empty-state';
@@ -221,6 +221,7 @@ function Detail() {
   const hasRefund = b.refund_amount != null || !!b.refunded_at;
   const fee = bookingFee(b);
   const samagri = bookingSamagri(b);
+  const discount = bookingDiscount(b);
   const samagriByPandit = b.samagri_by === 'pandit';
   // The list of the version booked (the shorter version has its own).
   const modeSamagri = samagriForMode(ts, b.pandit_service ?? {}, b.puja_mode);
@@ -510,9 +511,16 @@ function Detail() {
 
           <aside className="grid min-w-0 grid-cols-1 content-start gap-6 lg:sticky lg:top-24 lg:self-start">
             <Panel id="payment-h" title={t('payment.title')}>
-              <FeeLines price={b.total_amount} fee={fee} samagri={samagri} className="mb-3 border-b pb-3" />
+              <FeeLines
+                price={b.total_amount}
+                fee={fee}
+                samagri={samagri}
+                discount={discount}
+                couponCode={b.coupon_code}
+                className="mb-3 border-b pb-3"
+              />
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-muted-foreground">{hasExtras(fee, samagri) ? t('price.total') : t('review.total')}</span>
+                <span className="text-muted-foreground">{hasExtras(fee, samagri, discount) ? t('price.total') : t('review.total')}</span>
                 <span className="text-2xl font-semibold tabular-nums">{f.inr(payable)}</span>
               </div>
               {hasRefund ? (

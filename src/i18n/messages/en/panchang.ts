@@ -1,8 +1,9 @@
 // English strings for the "panchang" namespace. Flat keys; {name} placeholders are interpolated.
 const panchang = {
-  'meta.title': 'Panchang and sacred days',
+  'meta.title':
+    'Aaj ka Panchang — Today’s Tithi, Nakshatra, Vrat & Festivals',
   'meta.description':
-    'Today’s tithi, paksha, nakshatra, sunrise and sunset for your city, with the Purnima, Ekadashi, Pradosh and other sacred days of the next three months.',
+    'Free daily panchang for your city: today’s tithi, paksha, nakshatra, sunrise and sunset, with Purnima, Ekadashi, Pradosh, vrat and festivals of the next three months.',
   loading: 'Reading the panchang…',
 
   'hero.title': 'Panchang for {date} · {place}',
