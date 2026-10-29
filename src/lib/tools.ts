@@ -26,16 +26,25 @@ export { muhuratHref } from '@/lib/muhurat';
  * in the catalog are linked (callers filter against the live catalog).
  */
 export const DOSHA_REMEDY_PUJAS: Partial<Record<DoshaKey, string[]>> = {
-  mangal: ['navgraha-shanti', 'hanuman-chalisa-path'],
+  mangal: ['mangal-dosh-nivaran', 'hanuman-chalisa-path'],
   kaal_sarp: ['kaal-sarp-dosh-nivaran'],
-  pitra: ['pitru-paksha-shraddh'],
+  pitra: ['tripindi-shraddh', 'pitru-paksha-shraddh'],
   grahan: ['navgraha-shanti', 'mahamrityunjay-jaap'],
   guru_chandal: ['navgraha-shanti'],
-  angarak: ['navgraha-shanti', 'hanuman-chalisa-path'],
-  shrapit: ['navgraha-shanti'],
-  vish: ['navgraha-shanti'],
+  angarak: ['mangal-dosh-nivaran', 'hanuman-chalisa-path'],
+  shrapit: ['shani-shanti-puja', 'navgraha-shanti'],
+  vish: ['shani-shanti-puja', 'navgraha-shanti'],
   kemadruma: ['navgraha-shanti'],
 };
+
+/** For a running Shani period (sade sati, kantak or ashtam shani) in the kundali. */
+export const SHANI_REMEDY_PUJAS = ['shani-shanti-puja', 'hanuman-chalisa-path'];
+
+/** True when one of the kundali's Shani periods covers `now`. */
+export function shaniRunning(periods: { start: string; end: string }[] | undefined, now = new Date()): boolean {
+  const t = now.getTime();
+  return (periods ?? []).some((p) => Date.parse(p.start) <= t && t <= Date.parse(p.end));
+}
 
 /**
  * Tools worth linking from a puja's page, by catalog slug. `muhuratKind` links to that

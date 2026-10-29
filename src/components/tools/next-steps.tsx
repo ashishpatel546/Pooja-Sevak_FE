@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { CalendarHeart, Flower2, HandHeart } from 'lucide-react';
 import { pick, useLocale, useT } from '@/i18n';
-import type { Dosha } from '@/lib/kundali';
-import { DOSHA_REMEDY_PUJAS, muhuratHref, VIVAH_PUJA_SLUG } from '@/lib/tools';
+import type { Dosha, ShaniPeriod } from '@/lib/kundali';
+import { DOSHA_REMEDY_PUJAS, muhuratHref, SHANI_REMEDY_PUJAS, shaniRunning, VIVAH_PUJA_SLUG } from '@/lib/tools';
 import type { ServiceDefinition } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useApiQuery } from '@/components/customer/use-api';
@@ -35,13 +35,19 @@ export function MilanNextSteps() {
 }
 
 /**
- * Pujas traditionally done for the doshas present in a kundali (lib/tools.ts),
+ * Pujas traditionally done for the doshas present in a kundali and a running Shani
+ * period (sade sati, kantak, ashtam) — lib/tools.ts —
  * limited to pujas that exist and are active in the live catalog.
  */
-export function DoshaRemedies({ doshas }: { doshas: Dosha[] }) {
+export function DoshaRemedies({ doshas, shani }: { doshas: Dosha[]; shani?: ShaniPeriod[] }) {
   const tt = useT('tools');
   const { locale } = useLocale();
-  const wanted = [...new Set(doshas.filter((d) => d.present && !d.cancelled).flatMap((d) => DOSHA_REMEDY_PUJAS[d.key] ?? []))];
+  const wanted = [
+    ...new Set([
+      ...doshas.filter((d) => d.present && !d.cancelled).flatMap((d) => DOSHA_REMEDY_PUJAS[d.key] ?? []),
+      ...(shaniRunning(shani) ? SHANI_REMEDY_PUJAS : []),
+    ]),
+  ];
   const catalog = useApiQuery<ServiceDefinition[]>(wanted.length ? '/service-definitions' : null);
   const pujas = wanted
     .map((slug) => catalog.data?.find((p) => p.slug === slug && p.is_active !== false))

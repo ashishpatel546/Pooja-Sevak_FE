@@ -298,7 +298,7 @@ export default function KundaliReportPage() {
               <MilanNextSteps />
             </>
           ) : (
-            <DoshaRemedies doshas={r.result.doshas} />
+            <DoshaRemedies doshas={r.result.doshas} shani={r.result.shani} />
           )}
           <PushPrePrompt source={isMilan(r.result) ? 'milan' : 'kundali'} />
         </div>
