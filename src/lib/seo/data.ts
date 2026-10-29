@@ -56,3 +56,10 @@ export async function fetchListedPandits(): Promise<PanditListItem[] | null> {
 export function isMissing(status: number) {
   return status === 404 || status === 400;
 }
+
+/** Free full reports per month after signing in (admin setting); the seeded default when the API is down. */
+export const fetchKundaliLimits = cache(async () => {
+  const res = await getJson<{ kundali: number; milan: number }>('/kundali/limits');
+  const ok = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  return res.data && ok(res.data.kundali) && ok(res.data.milan) ? res.data : { kundali: 2, milan: 2 };
+});

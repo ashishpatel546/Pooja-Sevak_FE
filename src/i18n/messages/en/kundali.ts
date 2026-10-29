@@ -1,9 +1,10 @@
 // English strings for the "kundali" namespace. Flat keys; {name} placeholders are interpolated.
 // Report pages render this namespace in the language chosen for the report, not the site language.
 const kundali = {
-  'meta.title': 'Janam Kundali and Kundali Milan in Hindi and English',
+  'meta.title':
+    'Free Janam Kundali Online — Kundli by Date of Birth',
   'meta.description':
-    'Prepare your janam kundali and kundali milan (36 guna matching) with precise astronomical calculation and Lahiri ayanamsa: lagna, nine grahas, nakshatra, Manglik dosha and Vimshottari dasha, in Hindi or English.',
+    'Free birth chart by date, time and place of birth: lagna, nine grahas, nakshatra, Manglik dosha and Vimshottari dasha. Precise Lahiri calculation, PDF download.',
   'meta.reportTitle': 'Your kundali',
 
   'hero.invocation': '॥ श्री गणेशाय नमः ॥',

@@ -1,8 +1,9 @@
 // English strings for the "muhurat" namespace. Flat keys; {name} placeholders are interpolated.
 const muhurat = {
-  'meta.title': 'Shubh Muhurat for Vivah, Griha Pravesh and Birthdays',
+  'meta.title':
+    'Shubh Muhurat {years} — Marriage & Griha Pravesh Dates, Choghadiya',
   'meta.description':
-    'Find auspicious wedding and griha pravesh dates for your city, clear of Rahu kaal and Bhadra, and the good times of any day. Free, in Hindi and English.',
+    'Free shubh muhurat for your city: wedding and griha pravesh dates clear of Rahu kaal and Bhadra, plus choghadiya, Abhijit and Rahu kaal for any day. In Hindi and English.',
 
   'hero.invocation': '॥ श्री गणेशाय नमः ॥',
   'hero.title': 'Shubh muhurat',
