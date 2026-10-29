@@ -35,6 +35,7 @@ import {
 } from '@/lib/rashifal';
 import { cn } from '@/lib/utils';
 import { JsonLd } from '@/components/seo/json-ld';
+import { PushPrePrompt } from '@/components/notifications/push-preprompt';
 import { fetchRashifalReading, fetchRashifalWeek } from '@/components/rashifal/rashifal-server';
 import { MineBadge, RatingDots } from '@/components/rashifal/rashi-ui';
 
@@ -335,6 +336,8 @@ export default async function RashifalSignPage({ params, searchParams }: Props) 
             <p className="-mt-3 text-sm text-muted-foreground">{t('note.disclaimer')}</p>
           </div>
         )}
+
+        <PushPrePrompt source="rashifal" className="mt-10" />
 
         <section aria-labelledby="go-further" className="mt-10">
           <h2 id="go-further" className="text-2xl">

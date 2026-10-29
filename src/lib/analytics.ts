@@ -24,7 +24,10 @@ export type AnalyticsEvent =
   | 'booking_paid'
   | 'push_prompt_shown'
   | 'push_prompt_accepted'
-  | 'install_prompt_accepted';
+  | 'install_prompt_accepted'
+  | 'coupon_applied'
+  | 'referral_shared'
+  | 'referral_signup';
 
 export type AnalyticsParams = {
   tool?: AnalyticsTool;

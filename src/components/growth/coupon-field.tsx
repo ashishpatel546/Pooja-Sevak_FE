@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, TicketPercent, X } from 'lucide-react';
 import { useFormat, useT } from '@/i18n';
 import { api, ApiError } from '@/lib/api';
+import { track } from '@/lib/analytics';
 import type { BookingType, CouponQuote, MyCoupon, PujaMode } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,8 +75,11 @@ export function CouponField({
     setBusy(true);
     setError(null);
     try {
-      onQuote(await validate(c));
+      const q = await validate(c);
+      onQuote(q);
       setAuto(false);
+      // Never the code itself: personal (referral) codes identify a family.
+      track('coupon_applied', { source: 'manual', value: q.discount_paise / 100, currency: 'INR' });
       setCode('');
     } catch (e) {
       setError(messageFor(e));
@@ -105,6 +109,7 @@ export function CouponField({
             if (cancelled || touched.current) return;
             onQuote(q);
             setAuto(true);
+            track('coupon_applied', { source: 'auto', value: q.discount_paise / 100, currency: 'INR' });
             return;
           } catch {
             // not usable for this order (e.g. first-booking only): try the next

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { track } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth-context';
 import { clearRef, readRef, storeRef } from '@/lib/referral';
 
@@ -32,8 +33,11 @@ export function RefCapture() {
       clearRef();
       return;
     }
-    api('/referrals/claim', { method: 'POST', token, body: { code } })
-      .then(clearRef)
+    api<{ applied: boolean }>('/referrals/claim', { method: 'POST', token, body: { code } })
+      .then((res) => {
+        clearRef();
+        if (res?.applied) track('referral_signup', { source: 'referral' });
+      })
       .catch((e: unknown) => {
         // Keep it for a retry only when the request never got an answer.
         if (e instanceof ApiError && e.code !== 'network') clearRef();

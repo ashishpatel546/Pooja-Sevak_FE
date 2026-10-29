@@ -3,6 +3,7 @@
 import { CircleAlert, Copy, Gift, Share2, TicketPercent, UsersRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFormat, useT } from '@/i18n';
+import { track } from '@/lib/analytics';
 import type { MyCoupon, ReferralMe, ReferralStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,12 +46,14 @@ export default function ReferPage() {
     if (typeof navigator.share === 'function') {
       try {
         await navigator.share({ text: shareText });
+        track('referral_shared', { channel: 'native' });
         return;
       } catch {
         // dismissed: fall back to copying
       }
     }
     await copy(shareText);
+    track('referral_shared', { channel: 'copy' });
   };
 
   return (
@@ -99,7 +102,10 @@ export default function ReferPage() {
                   onFocus={(e) => e.currentTarget.select()}
                   className="min-h-11 w-full min-w-0 rounded-lg border bg-background px-3 text-sm"
                 />
-                <Button variant="outline" className="min-h-11 shrink-0" onClick={() => copy(d.share_url)}>
+                <Button variant="outline" className="min-h-11 shrink-0" onClick={() => {
+                    void copy(d.share_url);
+                    track('referral_shared', { channel: 'copy' });
+                  }}>
                   <Copy aria-hidden="true" />
                   <span className="sr-only sm:not-sr-only">{t('refer.copy')}</span>
                 </Button>
@@ -110,6 +116,7 @@ export default function ReferPage() {
                   render={
                     <a
                       href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+                      onClick={() => track('referral_shared', { channel: 'whatsapp' })}
                       target="_blank"
                       rel="noopener noreferrer"
                     />
