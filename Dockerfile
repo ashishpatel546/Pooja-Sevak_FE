@@ -18,9 +18,12 @@ ARG NEXT_PUBLIC_API_URL=http://localhost:6001/v1
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:6002
 # "true" only for the production image (search engines may index it); stage stays noindex.
 ARG NEXT_PUBLIC_INDEXABLE=false
+# GA4 measurement id (G-…); empty = analytics off.
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID=
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_INDEXABLE=$NEXT_PUBLIC_INDEXABLE \
+    NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID \
     NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
