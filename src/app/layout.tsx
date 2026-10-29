@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Mukta, Tiro_Devanagari_Hindi } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,6 +8,7 @@ import { NavBar } from "@/components/nav-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/install-prompt";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { I18nProvider } from "@/i18n/provider";
 import { getLocale, getT, messagesFor } from "@/i18n/server";
 import { SITE_URL } from "@/lib/seo/site";
@@ -70,6 +72,8 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = await getT("common");
+  // CSP nonce for third-party scripts (GA), when the proxy sets a nonce-based policy.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     // translate="no": the app has its own हिन्दी/English switch. Browser machine
     // translation (Chrome's Google Translate) rewrites text nodes behind React's
@@ -101,6 +105,7 @@ export default async function RootLayout({
           </AuthProvider>
           <Toaster position="top-center" richColors />
           <InstallPrompt />
+          <GoogleAnalytics nonce={nonce} />
         </ThemeProvider>
         </I18nProvider>
       </body>
