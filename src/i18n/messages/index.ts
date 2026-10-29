@@ -23,6 +23,7 @@ import en_payouts from './en/payouts';
 import en_chat from './en/chat';
 import en_kundali from './en/kundali';
 import en_muhurat from './en/muhurat';
+import en_rashifal from './en/rashifal';
 import hi_common from './hi/common';
 import hi_nav from './hi/nav';
 import hi_auth from './hi/auth';
@@ -47,6 +48,7 @@ import hi_payouts from './hi/payouts';
 import hi_chat from './hi/chat';
 import hi_kundali from './hi/kundali';
 import hi_muhurat from './hi/muhurat';
+import hi_rashifal from './hi/rashifal';
 
 export const en = {
   common: en_common,
@@ -73,6 +75,7 @@ export const en = {
   chat: en_chat,
   kundali: en_kundali,
   muhurat: en_muhurat,
+  rashifal: en_rashifal,
 };
 
 export type Messages = typeof en;
@@ -103,4 +106,5 @@ export const hi: { [N in Namespace]: Record<keyof Messages[N], string> } = {
   chat: hi_chat,
   kundali: hi_kundali,
   muhurat: hi_muhurat,
+  rashifal: hi_rashifal,
 };
