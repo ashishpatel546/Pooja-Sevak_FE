@@ -37,6 +37,9 @@ const info = {
   'about.values.body':
     '- **Shraddha first.** A puja is an act of faith, not a transaction. We want every ritual to feel complete and unhurried.\n- **Clear dakshina.** You see the pandit’s dakshina, and any platform fee, before you pay. Nothing is hidden. If a paid booking is cancelled before the puja is complete, you get a full refund.\n- **Respect for every tradition.** Customs differ by region and family. Pandits perform rituals as per their own parampara, and you can tell them about your family’s ways.\n- **Your family’s privacy.** Names, gotra and remembrances are shared only with the pandit performing your puja. We don’t sell your data. Read our [Privacy Policy](/privacy).\n- **Hindi first.** The whole platform works in Hindi, with English one tap away.',
 
+  'about.company.title': 'Who runs Pooja Sevak',
+  'about.company.text': 'Pooja Sevak is developed and operated by {company}.',
+  'about.company.contact': 'Company and contact details',
   'about.cta.title': 'Ready to book a puja?',
   'about.cta.text': 'Explore the pujas we offer, or invite a pandit ji to join you online.',
   'about.cta.pujas': 'See all pujas',

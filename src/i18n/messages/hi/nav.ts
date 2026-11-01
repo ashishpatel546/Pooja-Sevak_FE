@@ -57,6 +57,7 @@ const nav: Record<keyof typeof en, string> = {
   'footer.terms': 'सेवा की शर्तें',
   'footer.privacy': 'गोपनीयता नीति',
   'footer.refund': 'रद्दीकरण और रिफ़ंड',
+  'footer.operator': 'पूजा सेवक, {company} का ब्रांड है।',
   'footer.copyright':
     '© {year} पूजा सेवक। अनुष्ठान पंडित जी की परंपरा के अनुसार किए जाते हैं; रीति-रिवाज क्षेत्र और परिवार के अनुसार अलग हो सकते हैं।',
 };

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/seo/json-ld';
 import { Prose } from '@/components/info/prose';
 import { siteNodes } from '@/components/info/site-nodes';
+import { getSiteInfo } from '@/lib/business-profile';
 import { publicMetadata } from '@/lib/seo/metadata';
 import { breadcrumbSchema } from '@/lib/seo/schema';
 
@@ -23,8 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const [t, ts, locale] = await Promise.all([getT('info'), getT('seo'), getLocale()]);
-  const nodes = await siteNodes();
+  const [t, ts, locale, info] = await Promise.all([getT('info'), getT('seo'), getLocale(), getSiteInfo()]);
+  const nodes = await siteNodes(info);
+  const { operatorName, postalAddress } = info;
   return (
     <>
       <JsonLd
@@ -92,6 +94,24 @@ export default async function AboutPage() {
             <Prose text={t('about.values.body')} nodes={nodes} />
           </div>
         </section>
+
+        {operatorName && (
+          <section aria-labelledby="company-h" className="mt-14 max-w-[70ch]">
+            <h2 id="company-h" className="text-2xl sm:text-3xl">
+              {t('about.company.title')}
+            </h2>
+            <p className="mt-3 leading-relaxed text-foreground/90">{t('about.company.text', { company: operatorName })}</p>
+            {postalAddress.length > 0 && (
+              <address className="mt-2 text-muted-foreground not-italic">{postalAddress.join(', ')}</address>
+            )}
+            <Link
+              href="/contact"
+              className="mt-3 inline-flex min-h-9 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {t('about.company.contact')}
+            </Link>
+          </section>
+        )}
 
         <aside
           aria-labelledby="about-cta-h"

@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { Logo } from '@/components/brand/logo';
 import { getT } from '@/i18n/server';
 import { LanguageLinks } from '@/components/seo/language-links';
+import { getSiteInfo } from '@/lib/business-profile';
 
 export async function SiteFooter() {
-  const t = await getT('nav');
+  const [t, { operatorName, postalAddress, gstin }] = await Promise.all([getT('nav'), getSiteInfo()]);
   const tt = await getT('tools');
   return (
     <footer className="sandhya relative mt-16 overflow-hidden print:hidden">
@@ -65,7 +66,18 @@ export async function SiteFooter() {
         />
       </div>
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-7xl px-4 pt-5 pb-2 text-xs leading-relaxed text-[#f4e6d4]/60 sm:px-6">
+        {operatorName && (
+          <p className="mx-auto max-w-7xl px-4 pt-5 text-xs leading-relaxed text-[#f4e6d4]/80 sm:px-6">
+            <Link href="/contact" className="hover:text-[#fbe3b6] hover:underline">
+              {t('footer.operator', { company: operatorName })}
+            </Link>
+            {postalAddress.length > 0 && <span> {postalAddress.join(', ')}</span>}
+            {gstin && <span> · GSTIN {gstin}</span>}
+          </p>
+        )}
+        <p
+          className={`mx-auto max-w-7xl px-4 pb-2 text-xs leading-relaxed text-[#f4e6d4]/60 sm:px-6 ${operatorName ? 'pt-1' : 'pt-5'}`}
+        >
           {t('footer.copyright', { year: new Date().getFullYear() })}
         </p>
         <LanguageLinks className="mx-auto max-w-7xl px-4 pb-5 text-xs text-[#f4e6d4]/70 sm:px-6" />

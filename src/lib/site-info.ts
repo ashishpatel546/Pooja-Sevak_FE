@@ -62,6 +62,8 @@ export const FALLBACK_BUSINESS_PROFILE: BusinessProfile = {
 export type SiteInfo = {
   brandName: string;
   legalName: string;
+  /** The company behind the brand; empty while legal_name is still just the brand. */
+  operatorName: string;
   supportEmail: string;
   supportPhone: string;
   supportHours: string;
@@ -97,11 +99,15 @@ export function normalizeBusinessProfile(raw: unknown): BusinessProfile | null {
   return out;
 }
 
+const BRAND_NAMES = [BRAND_NAME, FALLBACK_BUSINESS_PROFILE.legal_name_hi].map((n) => n.toLowerCase());
+
 export function siteInfoFor(p: BusinessProfile, locale: Locale): SiteInfo {
   const officerEmail = p.grievance_officer_email;
+  const legalName = pick(p, 'legal_name', locale);
   return {
     brandName: BRAND_NAME,
-    legalName: pick(p, 'legal_name', locale),
+    legalName,
+    operatorName: BRAND_NAMES.includes(legalName.toLowerCase()) ? '' : legalName,
     supportEmail: p.support_email,
     supportPhone: p.support_phone,
     supportHours: pick(p, 'support_hours', locale),

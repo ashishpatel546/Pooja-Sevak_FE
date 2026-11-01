@@ -55,6 +55,7 @@ const nav = {
   'footer.terms': 'Terms of Service',
   'footer.privacy': 'Privacy Policy',
   'footer.refund': 'Cancellation & refunds',
+  'footer.operator': 'Pooja Sevak is a brand of {company}.',
   'footer.copyright':
     '© {year} Pooja Sevak. Rituals are performed as per the pandit’s tradition; customs vary by region and family.',
 } satisfies Record<string, string>;
