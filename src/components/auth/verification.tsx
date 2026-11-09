@@ -193,7 +193,8 @@ export function MobileVerifier({
       setResendAt(sentAt + (res.resend_after ?? 30) * 1000);
       setNow(sentAt);
       setStep('otp');
-      toast.success(t('mobile.sentToast', { mobile: res.mobile || m }));
+      // No SMS gateway yet: the API returned the code, and nothing was sent.
+      if (!res.dev_otp) toast.success(t('mobile.sentToast', { mobile: res.mobile || m }));
     } catch (e2) {
       if (e2 instanceof ApiError && e2.code !== 'http') setErr(e2.message);
       else if (e2 instanceof ApiError && e2.status === 409) setErr(t('mobile.inUse'));
@@ -274,8 +275,14 @@ export function MobileVerifier({
       noValidate
       className="grid gap-4"
     >
-      <p className="text-sm leading-relaxed text-muted-foreground">{t('mobile.codeSent', { mobile })}</p>
-      <Field id={otpId} label={t('otp.label')} error={err} hint={t('otp.hint')}>
+      {devOtp ? (
+        <p className="rounded-md border border-dashed px-3 py-2 text-sm leading-relaxed text-foreground">
+          {t('otp.devNote', { code: devOtp })}
+        </p>
+      ) : (
+        <p className="text-sm leading-relaxed text-muted-foreground">{t('mobile.codeSent', { mobile })}</p>
+      )}
+      <Field id={otpId} label={t('otp.label')} error={err} hint={devOtp ? t('otp.hintNoSms') : t('otp.hint')}>
         <CodeInput
           id={otpId}
           value={otp}
@@ -295,12 +302,6 @@ export function MobileVerifier({
         <TimerReset className="size-4 shrink-0" aria-hidden="true" />
         {expired ? t('otp.expired') : t('otp.expiresIn', { time: mmss(expiresIn) })}
       </p>
-
-      {devOtp && (
-        <p className="rounded-md border border-dashed px-3 py-2 font-mono text-xs text-muted-foreground">
-          {t('otp.devNote', { code: devOtp })}
-        </p>
-      )}
 
       <Button type="submit" size="lg" disabled={busy || locked || expired || otp.length !== 6} className="w-full">
         {busy && <Loader2 className="animate-spin" aria-hidden="true" />}
