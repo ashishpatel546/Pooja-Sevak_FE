@@ -158,7 +158,8 @@ const auth = {
   'otp.attemptsLeft_other': 'That code didn’t match. You have {count} attempts left.',
   'otp.tooMany': 'Too many incorrect attempts. Send a new code to try again.',
   'otp.verified': 'Your mobile number is verified.',
-  'otp.devNote': 'Development mode: your code is {code}',
+  'otp.devNote': 'SMS isn’t active yet, so no message will arrive. Enter {code} to continue.',
+  'otp.hintNoSms': 'Type or paste the 6 digits.',
   // Verification gate (booking needs a verified email + mobile)
   'verify.title': 'One quick check before you book',
   'verify.intro': 'So your pandit and our team can reach you, every booking needs a verified email and mobile number. Your chosen time and details are kept while you do this.',
